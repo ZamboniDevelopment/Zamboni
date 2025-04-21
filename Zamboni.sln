@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zamboni", "Zamboni.csproj", "{2AEBBC14-D370-4F66-98DA-73B452D3E6AE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blaze2SDK", "..\..\BlazeSDK\Blaze2SDK\Blaze2SDK.csproj", "{F9EB4257-B332-4E88-ACF4-EA53233A5470}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazeCommon", "..\..\BlazeSDK\BlazeCommon\BlazeCommon.csproj", "{4661A044-7F48-4AC8-B6BF-D8C4277A22C0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FixedSsl", "..\..\BlazeSDK\FixedSsl\FixedSsl.csproj", "{C9DCF8A5-E000-496F-A475-52DC87886194}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tdf", "..\..\BlazeSDK\Tdf\Tdf.csproj", "{F791BA6A-8F3F-4A12-983C-32CF10979F74}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XI5", "..\..\BlazeSDK\XI5\XI5.csproj", "{957CA2F0-E271-4644-9BF3-52BDB0BBE388}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2AEBBC14-D370-4F66-98DA-73B452D3E6AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2AEBBC14-D370-4F66-98DA-73B452D3E6AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2AEBBC14-D370-4F66-98DA-73B452D3E6AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2AEBBC14-D370-4F66-98DA-73B452D3E6AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9EB4257-B332-4E88-ACF4-EA53233A5470}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9EB4257-B332-4E88-ACF4-EA53233A5470}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9EB4257-B332-4E88-ACF4-EA53233A5470}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9EB4257-B332-4E88-ACF4-EA53233A5470}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4661A044-7F48-4AC8-B6BF-D8C4277A22C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4661A044-7F48-4AC8-B6BF-D8C4277A22C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4661A044-7F48-4AC8-B6BF-D8C4277A22C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4661A044-7F48-4AC8-B6BF-D8C4277A22C0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9DCF8A5-E000-496F-A475-52DC87886194}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9DCF8A5-E000-496F-A475-52DC87886194}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9DCF8A5-E000-496F-A475-52DC87886194}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9DCF8A5-E000-496F-A475-52DC87886194}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F791BA6A-8F3F-4A12-983C-32CF10979F74}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F791BA6A-8F3F-4A12-983C-32CF10979F74}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F791BA6A-8F3F-4A12-983C-32CF10979F74}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F791BA6A-8F3F-4A12-983C-32CF10979F74}.Release|Any CPU.Build.0 = Release|Any CPU
+		{957CA2F0-E271-4644-9BF3-52BDB0BBE388}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{957CA2F0-E271-4644-9BF3-52BDB0BBE388}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{957CA2F0-E271-4644-9BF3-52BDB0BBE388}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{957CA2F0-E271-4644-9BF3-52BDB0BBE388}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

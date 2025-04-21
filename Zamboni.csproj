@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net6.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\BlazeSDK\Blaze2SDK\Blaze2SDK.csproj" />
+      <ProjectReference Include="..\..\BlazeSDK\BlazeCommon\BlazeCommon.csproj" />
+      <ProjectReference Include="..\..\BlazeSDK\FixedSsl\FixedSsl.csproj" />
+      <ProjectReference Include="..\..\BlazeSDK\Tdf\Tdf.csproj" />
+      <ProjectReference Include="..\..\BlazeSDK\XI5\XI5.csproj" />
+    </ItemGroup>
+
+</Project>
