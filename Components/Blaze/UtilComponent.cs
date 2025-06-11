@@ -16,19 +16,20 @@ public class UtilComponent : UtilComponentBase.Server
         {
             mComponentIds = new List<ushort>
             {
-                1, 
-                5, 
-                 7, 
+                1,
+                4,
+                5,
+                7,
                 9,
-                 10,
-                 11,
-                 13,
-                 15, 
-                 21,
-                 30722,
-                 
-                 2049, // NHL10 Specific Component
-                 69 // NHL10 Specific Component
+                10,
+                11,
+                13,
+                15,
+                21,
+                30722,
+
+                2049, // NHL10 Specific Component
+                69 // NHL10 Specific Component
             },
             mConfig = new FetchConfigResponse
             {
@@ -44,24 +45,26 @@ public class UtilComponent : UtilComponentBase.Server
                 {
                     mAddress = "127.0.0.1",
                     mPort = 17502,
-                    mSiteName =  "qos"
+                    mSiteName = "qos"
                 },
                 mNumLatencyProbes = 10,
                 mPingSiteInfoByAliasMap = new SortedDictionary<string, QosPingSiteInfo>()
                 {
-                    {"qos",new QosPingSiteInfo()
                     {
-                        mAddress = "127.0.0.1",
-                        mPort = 17502,
-                        mSiteName =  "qos"
-                    }}
+                        "qos", new QosPingSiteInfo()
+                        {
+                            mAddress = "127.0.0.1",
+                            mPort = 17502,
+                            mSiteName = "qos"
+                        }
+                    }
                 },
                 mServiceId = 1
             },
             mServerVersion = "Zamboni 0.0.1"
-            
         });
     }
+
     public override Task<PingResponse> PingAsync(NullStruct request, BlazeRpcContext context)
     {
         return Task.FromResult(new PingResponse()
@@ -69,19 +72,14 @@ public class UtilComponent : UtilComponentBase.Server
             mServerTime = (uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds
         });
     }
-    
-    public override Task<FetchConfigResponse> FetchClientConfigAsync(FetchClientConfigRequest request, BlazeRpcContext context)
+
+    public override Task<FetchConfigResponse> FetchClientConfigAsync(FetchClientConfigRequest request,
+        BlazeRpcContext context)
     {
         return Task.FromResult(new FetchConfigResponse()
         {
             mConfig = new SortedDictionary<string, string>()
-            {   //TODO IDK
-                // {"OSDK_CORE","true"},
-                // {"OSDK_CLIENT","true"},
-                // {"OSDK_NUCLEUS","true"},
-                // {"OSDK_WEBOFFER","true"},
-                // {"OSDK_EASW","true"},
-                // {"NHL_CUSTOM","true"},
+            {
             }
         });
     }
@@ -99,7 +97,7 @@ public class UtilComponent : UtilComponentBase.Server
             }
         });
     }
-    
+
     private GetTelemetryServerResponse GetTele()
     {
         return new GetTelemetryServerResponse()
@@ -115,25 +113,28 @@ public class UtilComponent : UtilComponentBase.Server
             mSendDelay = 15000,
             mKey = "some-telemetry-key",
             mSendPercentage = 75
-
         };
     }
-    
+
     public override Task<NullStruct> SetClientMetricsAsync(ClientMetrics request, BlazeRpcContext context)
     {
         Console.WriteLine("Handling SetClientMetricsAsync!");
 
         return Task.FromResult(new NullStruct()
         {
-            
         });
     }
-    
-    public override Task<GetTelemetryServerResponse> GetTelemetryServerAsync(GetTelemetryServerRequest request, BlazeRpcContext context)
+
+    public override Task<GetTelemetryServerResponse> GetTelemetryServerAsync(GetTelemetryServerRequest request,
+        BlazeRpcContext context)
     {
         return Task.FromResult(GetTele());
     }
 
-    
+    public override Task<NullStruct> UserSettingsLoadAllAsync(NullStruct request, BlazeRpcContext context)
+    {
+        return Task.FromResult(new NullStruct()
+        {
+        });
+    }
 }
-

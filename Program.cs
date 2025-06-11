@@ -47,6 +47,7 @@ namespace Zamboni
             core.AddComponent<LeagueComponent>();
             core.AddComponent<ClubsComponent>();
             core.AddComponent<StatsComponent>();
+            core.AddComponent<GameManagerComponent>();
 
             core.AddComponent<DynamicMessagingComponent>(); // Seems to be NHL10 Specific Components
             core.AddComponent<OsdkSettingsComponent>(); // Seems to be NHL10 Specific Components
