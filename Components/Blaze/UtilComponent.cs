@@ -76,6 +76,20 @@ public class UtilComponent : UtilComponentBase.Server
     public override Task<FetchConfigResponse> FetchClientConfigAsync(FetchClientConfigRequest request,
         BlazeRpcContext context)
     {
+        if (request.mConfigSection.Equals("OSDK_ROSTER"))
+        {
+            // throw new Exception();
+            return Task.FromResult(new FetchConfigResponse()
+            {
+                mConfig = new SortedDictionary<string, string>()
+                {
+                    // {
+                    //     "ROSTER_URL", "uhhhhh,"
+                    // },
+                }
+            });
+        }
+
         return Task.FromResult(new FetchConfigResponse()
         {
             mConfig = new SortedDictionary<string, string>()
@@ -118,8 +132,6 @@ public class UtilComponent : UtilComponentBase.Server
 
     public override Task<NullStruct> SetClientMetricsAsync(ClientMetrics request, BlazeRpcContext context)
     {
-        Console.WriteLine("Handling SetClientMetricsAsync!");
-
         return Task.FromResult(new NullStruct()
         {
         });
@@ -132,6 +144,13 @@ public class UtilComponent : UtilComponentBase.Server
     }
 
     public override Task<NullStruct> UserSettingsLoadAllAsync(NullStruct request, BlazeRpcContext context)
+    {
+        return Task.FromResult(new NullStruct()
+        {
+        });
+    }
+
+    public override Task<NullStruct> UserSettingsSaveAsync(NullStruct request, BlazeRpcContext context)
     {
         return Task.FromResult(new NullStruct()
         {

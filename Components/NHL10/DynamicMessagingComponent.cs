@@ -10,7 +10,7 @@ internal class DynamicMessagingComponent : DynamicMessagingComponentBase.Server
     {
         return Task.FromResult(new NullStruct());
     }
-    
+
     public override Task<NullStruct> getConfig(NullStruct request, BlazeRpcContext context)
     {
         return Task.FromResult(new NullStruct());

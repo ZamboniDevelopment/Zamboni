@@ -21,7 +21,7 @@ internal class StatsComponent : StatsComponentBase.Server
                 //         {
                 //             "jaajaa"
                 //         }
-                    // }
+                // }
                 // }
             }
         });

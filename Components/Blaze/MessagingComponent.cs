@@ -14,5 +14,4 @@ internal class MessagingComponent : MessagingComponentBase.Server
             mCount = 0
         });
     }
-
 }

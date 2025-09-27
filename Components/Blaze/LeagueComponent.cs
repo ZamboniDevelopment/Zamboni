@@ -10,7 +10,6 @@ internal class LeagueComponent : LeagueComponentBase.Server
     {
         return Task.FromResult(new NullStruct()
         {
-            
         });
     }
 }

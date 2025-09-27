@@ -13,12 +13,12 @@ public class UserSessionsComponent : UserSessionsBase.Server
         {
         });
     }
-    public override Task<NullStruct> UpdateHardwareFlagsAsync(UpdateHardwareFlagsRequest request, BlazeRpcContext context)
+
+    public override Task<NullStruct> UpdateHardwareFlagsAsync(UpdateHardwareFlagsRequest request,
+        BlazeRpcContext context)
     {
         return Task.FromResult(new NullStruct()
         {
         });
     }
-
-
 }

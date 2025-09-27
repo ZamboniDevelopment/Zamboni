@@ -8,18 +8,22 @@ using BlazeCommon;
 namespace Zamboni.Components.Blaze
 {
     internal class RedirectorComponent : RedirectorComponentBase.Server
-   {
-        public override Task<ServerInstanceInfo> GetServerInstanceAsync(ServerInstanceRequest request, BlazeRpcContext context)
+    {
+        public override Task<ServerInstanceInfo> GetServerInstanceAsync(ServerInstanceRequest request,
+            BlazeRpcContext context)
         {
+            string stringIp = Program.ZamboniConfig.GameServerIp;
+            if (stringIp.Equals("auto")) stringIp = Program.MachineIP;
+
             ServerInstanceInfo responseData = new ServerInstanceInfo()
             {
                 mAddress = new ServerAddress()
                 {
                     IpAddress = new IpAddress()
                     {
-                        mHostname = "127.0.0.1",
-                        mIp = GetIPAddressAsUInt("127.0.0.1"),
-                        mPort = 13337
+                        mHostname = stringIp,
+                        mIp = GetIPAddressAsUInt(stringIp),
+                        mPort = Program.ZamboniConfig.GameServerPort
                     },
                 },
                 mSecure = false,
@@ -40,6 +44,4 @@ namespace Zamboni.Components.Blaze
             return BitConverter.ToUInt32(bytes, 0);
         }
     }
-    
-
 }

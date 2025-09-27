@@ -10,7 +10,7 @@ internal class OsdkSettingsComponent : OsdkSettingsComponentBase.Server
     {
         return Task.FromResult(new NullStruct());
     }
-    
+
     public override Task<NullStruct> fetchSettingsGroups(NullStruct request, BlazeRpcContext context)
     {
         return Task.FromResult(new NullStruct());
