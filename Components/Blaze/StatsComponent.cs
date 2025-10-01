@@ -13,17 +13,6 @@ internal class StatsComponent : StatsComponentBase.Server
         return Task.FromResult(new KeyScopes
         {
             mKeyScopesMap = new SortedDictionary<string, KeyScopeItem>()
-            {
-                // {"jaa",new KeyScopeItem
-                //     {
-                //         mKeyScopeType = KeyScopeType.KEY_SCOPE_TYPE_STRING,
-                //         mKeyScopeList = new List<string>()
-                //         {
-                //             "jaajaa"
-                //         }
-                // }
-                // }
-            }
         });
     }
 }

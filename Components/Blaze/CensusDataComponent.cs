@@ -8,15 +8,11 @@ internal class CensusDataComponent : CensusDataComponentBase.Server
 {
     public override Task<NullStruct> SubscribeToCensusDataAsync(NullStruct request, BlazeRpcContext context)
     {
-        return Task.FromResult(new NullStruct()
-        {
-        });
+        return Task.FromResult(new NullStruct());
     }
 
     public override Task<NullStruct> UnsubscribeFromCensusDataAsync(NullStruct request, BlazeRpcContext context)
     {
-        return Task.FromResult(new NullStruct()
-        {
-        });
+        return Task.FromResult(new NullStruct());
     }
 }

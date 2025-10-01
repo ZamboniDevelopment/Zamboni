@@ -5,15 +5,15 @@ namespace Zamboni;
 
 public class HockeyUser
 {
-    public BlazeServerConnection BlazeServerConnection;
-    public ulong userId;
-    public string username;
-    public NetworkAddress NetworkAddress;
-
-    public HockeyUser(BlazeServerConnection BlazeServerConnection, ulong userId, string username)
+    public HockeyUser(BlazeServerConnection blazeServerConnection, ulong userId, string username)
     {
-        this.BlazeServerConnection = BlazeServerConnection;
-        this.userId = userId;
-        this.username = username;
+        BlazeServerConnection = blazeServerConnection;
+        UserId = userId;
+        Username = username;
     }
+
+    public NetworkAddress NetworkAddress { get; set; }
+    public BlazeServerConnection BlazeServerConnection { get; }
+    public ulong UserId { get; }
+    public string Username { get; }
 }

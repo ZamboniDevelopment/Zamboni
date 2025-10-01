@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Blaze2SDK.Blaze;
 using Blaze2SDK.Blaze.Authentication;
@@ -18,28 +16,17 @@ public class AuthenticationComponent : AuthenticationComponentBase.Server
 
     public override Task<ConsoleLoginResponse> Ps3LoginAsync(PS3LoginRequest request, BlazeRpcContext context)
     {
-        XI5Ticket ticket = new XI5Ticket(request.mPS3Ticket);
-        var currentTimeStamp = DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
+        var ticket = new XI5Ticket(request.mPS3Ticket);
 
         Logger.Warn(ticket.OnlineId + " connected");
-        Program.HockeyUsers.Add(new HockeyUser(context.BlazeConnection, ticket.UserId, ticket.OnlineId));
+        Manager.HockeyUsers.Add(new HockeyUser(context.BlazeConnection, ticket.UserId, ticket.OnlineId));
 
-        //NECESSARY?
         Task.Run(async () =>
         {
-            var externalBlob = new List<byte>();
-            externalBlob.AddRange(Encoding.ASCII.GetBytes(ticket.OnlineId.PadRight(20, '\0')));
-            externalBlob.AddRange(Encoding.ASCII.GetBytes(ticket.Domain));
-            externalBlob.AddRange(Encoding.ASCII.GetBytes(ticket.Region));
-            externalBlob.AddRange(Encoding.ASCII.GetBytes("ps3"));
-            externalBlob.Add(0x0);
-            externalBlob.Add(0x1);
-            externalBlob.AddRange(new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
-            await Task.Delay(500);
+            await Task.Delay(100);
             UserSessionsBase.Server.NotifyUserAddedAsync(context.BlazeConnection, new UserIdentification
             {
                 mAccountLocale = 1701729619,
-                mExternalBlob = externalBlob.ToArray(),
                 mExternalId = ticket.UserId,
                 mBlazeId = (uint)ticket.UserId,
                 mName = ticket.OnlineId,
@@ -49,7 +36,7 @@ public class AuthenticationComponent : AuthenticationComponentBase.Server
 
         Task.Run(async () =>
         {
-            await Task.Delay(1000);
+            await Task.Delay(200);
             UserSessionsBase.Server.NotifyUserSessionExtendedDataUpdateAsync(context.BlazeConnection,
                 new UserSessionExtendedDataUpdate
                 {
@@ -59,47 +46,56 @@ public class AuthenticationComponent : AuthenticationComponentBase.Server
                         {
                             XboxClientAddress = null,
                             XboxServerAddress = null,
-                            IpPairAddress = null,
+                            //TODO KEY POINT !!!
+                            IpPairAddress = new IpPairAddress
+                            {
+                                ExternalAddress = new IpAddress
+                                {
+                                    Ip = 0,
+                                    Port = 3659
+                                },
+                                InternalAddress = new IpAddress
+                                {
+                                    Ip = 0,
+                                    Port = 3659
+                                }
+                            },
                             IpAddress = null,
                             HostNameAddress = null
                         },
                         mBestPingSiteAlias = "qos",
                         mClientAttributes = new SortedDictionary<uint, int>(),
                         mCountry = "",
-                        mDataMap = new SortedDictionary<uint, int>()
+                        mDataMap = new SortedDictionary<uint, int>
                         {
                             { 0x00070047, 0 } //???
                         },
                         mHardwareFlags = HardwareFlags.None,
-                        mLatencyList = new List<int>()
-                        {
-                        },
+                        mLatencyList = new List<int>(),
                         mQosData = new NetworkQosData
                         {
-                            mDownstreamBitsPerSecond = 0,
+                            mDownstreamBitsPerSecond = 10,
                             mNatType = NatType.NAT_TYPE_OPEN,
-                            mUpstreamBitsPerSecond = 0
+                            mUpstreamBitsPerSecond = 10
                         },
                         mUserInfoAttribute = 0,
                         mBlazeObjectIdList = new List<ulong>()
-                        {
-                        }
                     },
                     mUserId = (uint)ticket.UserId
                 });
         });
 
-        return Task.FromResult(new ConsoleLoginResponse()
+        return Task.FromResult(new ConsoleLoginResponse
         {
-            mSessionInfo = new SessionInfo()
+            mSessionInfo = new SessionInfo
             {
                 mBlazeUserId = (uint)ticket.UserId,
-                mSessionKey = "session-key",
+                mSessionKey = ticket.UserId.ToString(),
                 mEmail = "",
-                mPersonaDetails = new PersonaDetails()
+                mPersonaDetails = new PersonaDetails
                 {
                     mDisplayName = ticket.OnlineId,
-                    mLastAuthenticated = (uint)currentTimeStamp,
+                    mLastAuthenticated = 0,
                     mPersonaId = (long)ticket.UserId,
                     mExtId = ticket.UserId,
                     mExtType = ExternalRefType.PS3
@@ -107,35 +103,20 @@ public class AuthenticationComponent : AuthenticationComponentBase.Server
                 mUserId = (long)ticket.UserId
             },
             mTosHost = "",
-            mTosUri = "",
+            mTosUri = ""
         });
     }
 
 
     public override Task<NullStruct> LogoutAsync(NullStruct request, BlazeRpcContext context)
     {
-        HockeyUser leaver = null;
-        foreach (HockeyUser hockeyUser in Program.HockeyUsers)
-        {
-            if (hockeyUser.BlazeServerConnection.Equals(context.BlazeConnection))
-            {
-                leaver = hockeyUser;
-                Logger.Warn(leaver.username + " disconnected");
-
-                break;
-            }
-        }
-
-        if (leaver != null) Program.HockeyUsers.Remove(leaver);
-        return Task.FromResult(new NullStruct()
-        {
-        });
+        var leaver = Manager.GetHockeyUser(context.BlazeConnection);
+        if (leaver != null) Manager.HockeyUsers.Remove(leaver);
+        return Task.FromResult(new NullStruct());
     }
 
     public override Task<NullStruct> CreateWalUserSessionAsync(NullStruct request, BlazeRpcContext context)
     {
-        return Task.FromResult(new NullStruct()
-        {
-        });
+        return Task.FromResult(new NullStruct());
     }
 }

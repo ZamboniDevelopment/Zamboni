@@ -39,19 +39,19 @@ public class UtilComponent : UtilComponentBase.Server
                     { "voipHeadsetUpdateRate", "1000" }
                 }
             },
-            mQosSettings = new QosConfigInfo()
+            mQosSettings = new QosConfigInfo
             {
-                mBandwidthPingSiteInfo = new QosPingSiteInfo()
+                mBandwidthPingSiteInfo = new QosPingSiteInfo
                 {
                     mAddress = "127.0.0.1",
                     mPort = 17502,
                     mSiteName = "qos"
                 },
                 mNumLatencyProbes = 10,
-                mPingSiteInfoByAliasMap = new SortedDictionary<string, QosPingSiteInfo>()
+                mPingSiteInfoByAliasMap = new SortedDictionary<string, QosPingSiteInfo>
                 {
                     {
-                        "qos", new QosPingSiteInfo()
+                        "qos", new QosPingSiteInfo
                         {
                             mAddress = "127.0.0.1",
                             mPort = 17502,
@@ -67,7 +67,7 @@ public class UtilComponent : UtilComponentBase.Server
 
     public override Task<PingResponse> PingAsync(NullStruct request, BlazeRpcContext context)
     {
-        return Task.FromResult(new PingResponse()
+        return Task.FromResult(new PingResponse
         {
             mServerTime = (uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds
         });
@@ -77,33 +77,29 @@ public class UtilComponent : UtilComponentBase.Server
         BlazeRpcContext context)
     {
         if (request.mConfigSection.Equals("OSDK_ROSTER"))
-        {
             // throw new Exception();
-            return Task.FromResult(new FetchConfigResponse()
+            return Task.FromResult(new FetchConfigResponse
             {
-                mConfig = new SortedDictionary<string, string>()
+                mConfig = new SortedDictionary<string, string>
                 {
                     // {
                     //     "ROSTER_URL", "uhhhhh,"
                     // },
                 }
             });
-        }
 
-        return Task.FromResult(new FetchConfigResponse()
+        return Task.FromResult(new FetchConfigResponse
         {
             mConfig = new SortedDictionary<string, string>()
-            {
-            }
         });
     }
 
     public override Task<PostAuthResponse> PostAuthAsync(NullStruct request, BlazeRpcContext context)
     {
-        return Task.FromResult(new PostAuthResponse()
+        return Task.FromResult(new PostAuthResponse
         {
             mTelemetryServer = GetTele(),
-            mTickerServer = new GetTickerServerResponse()
+            mTickerServer = new GetTickerServerResponse
             {
                 mAddress = "127.0.0.1",
                 mPort = 8999,
@@ -114,7 +110,7 @@ public class UtilComponent : UtilComponentBase.Server
 
     private GetTelemetryServerResponse GetTele()
     {
-        return new GetTelemetryServerResponse()
+        return new GetTelemetryServerResponse
         {
             mAddress = "127.0.0.1",
             mIsAnonymous = false,
@@ -132,9 +128,7 @@ public class UtilComponent : UtilComponentBase.Server
 
     public override Task<NullStruct> SetClientMetricsAsync(ClientMetrics request, BlazeRpcContext context)
     {
-        return Task.FromResult(new NullStruct()
-        {
-        });
+        return Task.FromResult(new NullStruct());
     }
 
     public override Task<GetTelemetryServerResponse> GetTelemetryServerAsync(GetTelemetryServerRequest request,
@@ -145,15 +139,11 @@ public class UtilComponent : UtilComponentBase.Server
 
     public override Task<NullStruct> UserSettingsLoadAllAsync(NullStruct request, BlazeRpcContext context)
     {
-        return Task.FromResult(new NullStruct()
-        {
-        });
+        return Task.FromResult(new NullStruct());
     }
 
     public override Task<NullStruct> UserSettingsSaveAsync(NullStruct request, BlazeRpcContext context)
     {
-        return Task.FromResult(new NullStruct()
-        {
-        });
+        return Task.FromResult(new NullStruct());
     }
 }

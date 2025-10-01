@@ -8,8 +8,6 @@ internal class LeagueComponent : LeagueComponentBase.Server
 {
     public override Task<NullStruct> GetLeaguesByUserAsync(NullStruct request, BlazeRpcContext context)
     {
-        return Task.FromResult(new NullStruct()
-        {
-        });
+        return Task.FromResult(new NullStruct());
     }
 }
