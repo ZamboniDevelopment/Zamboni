@@ -10,19 +10,43 @@ public class UserSessionsComponent : UserSessionsBase.Server
 {
     public override Task<NullStruct> UpdateNetworkInfoAsync(NetworkInfo request, BlazeRpcContext context)
     {
-        var hockeyUser = Manager.GetHockeyUser(context.BlazeConnection);
-        hockeyUser.NetworkAddress = request.mAddress;
+        var zamboniUser = Manager.GetZamboniUser(context.BlazeConnection);
+        zamboniUser.NetworkInfo = request;
+
+        NotifyUserSessionExtendedDataUpdateAsync(context.BlazeConnection,
+            new UserSessionExtendedDataUpdate
+            {
+                mExtendedData = new UserSessionExtendedData
+                {
+                    mAddress = request.mAddress,
+                    mBestPingSiteAlias = "qos",
+                    mClientAttributes = new SortedDictionary<uint, int>(),
+                    mCountry = "",
+                    mDataMap = new SortedDictionary<uint, int>(),
+                    mHardwareFlags = HardwareFlags.None,
+                    mLatencyList = new List<int>
+                    {
+                        10
+                    },
+                    mQosData = request.mQosData,
+                    mUserInfoAttribute = 0,
+                    mBlazeObjectIdList = new List<ulong>()
+                },
+                mUserId = (uint)zamboniUser.UserId
+            });
+
         return Task.FromResult(new NullStruct());
     }
 
-    public override Task<NullStruct> UpdateHardwareFlagsAsync(UpdateHardwareFlagsRequest request, BlazeRpcContext context)
+    public override Task<NullStruct> UpdateHardwareFlagsAsync(UpdateHardwareFlagsRequest request,
+        BlazeRpcContext context)
     {
         return Task.FromResult(new NullStruct());
     }
 
     public override Task<UserData> LookupUserAsync(UserIdentification request, BlazeRpcContext context)
     {
-        var target = Manager.GetHockeyUser(request.mName);
+        var target = Manager.GetZamboniUser(request.mName);
 
         if (target == null) return Task.FromResult(new UserData());
 
@@ -30,15 +54,13 @@ public class UserSessionsComponent : UserSessionsBase.Server
         {
             mExtendedData = new UserSessionExtendedData
             {
-                mAddress = target.NetworkAddress,
+                mAddress = target.NetworkInfo.mAddress,
                 mBestPingSiteAlias = "qos",
                 mClientAttributes = new SortedDictionary<uint, int>(),
-                mCountry = "country",
                 mDataMap = new SortedDictionary<uint, int>(),
                 mHardwareFlags = HardwareFlags.None,
                 mLatencyList = new List<int>(),
-                mQosData = default,
-                mUserInfoAttribute = 0,
+                mQosData = target.NetworkInfo.mQosData,
                 mBlazeObjectIdList = new List<ulong>()
             },
             mStatusFlags = UserDataFlags.Online,

@@ -15,4 +15,9 @@ internal class ClubsComponent : ClubsComponentBase.Server
     {
         return Task.FromResult(new NullStruct());
     }
+
+    public override Task<NullStruct> UpdateMemberOnlineStatusAsync(NullStruct request, BlazeRpcContext context)
+    {
+        return Task.FromResult(new NullStruct());
+    }
 }

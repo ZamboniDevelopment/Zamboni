@@ -1,8 +1,8 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Blaze2SDK.Blaze;
 using Blaze2SDK.Blaze.Authentication;
-using Blaze2SDK.Blaze.Util;
 using Blaze2SDK.Components;
 using BlazeCommon;
 using NLog;
@@ -19,7 +19,8 @@ public class AuthenticationComponent : AuthenticationComponentBase.Server
         var ticket = new XI5Ticket(request.mPS3Ticket);
 
         Logger.Warn(ticket.OnlineId + " connected");
-        Manager.HockeyUsers.Add(new HockeyUser(context.BlazeConnection, ticket.UserId, ticket.OnlineId));
+        foreach (var hockeyUser in Manager.ZamboniUsers.ToList().Where(hockeyUser => hockeyUser.Username.Equals(ticket.OnlineId))) Manager.ZamboniUsers.Remove(hockeyUser);
+        Manager.ZamboniUsers.Add(new ZamboniUser(context.BlazeConnection, ticket.UserId, ticket.OnlineId));
 
         Task.Run(async () =>
         {
@@ -42,42 +43,17 @@ public class AuthenticationComponent : AuthenticationComponentBase.Server
                 {
                     mExtendedData = new UserSessionExtendedData
                     {
-                        mAddress = new NetworkAddress
-                        {
-                            XboxClientAddress = null,
-                            XboxServerAddress = null,
-                            //TODO KEY POINT !!!
-                            IpPairAddress = new IpPairAddress
-                            {
-                                ExternalAddress = new IpAddress
-                                {
-                                    Ip = 0,
-                                    Port = 3659
-                                },
-                                InternalAddress = new IpAddress
-                                {
-                                    Ip = 0,
-                                    Port = 3659
-                                }
-                            },
-                            IpAddress = null,
-                            HostNameAddress = null
-                        },
+                        mAddress = null!,
                         mBestPingSiteAlias = "qos",
                         mClientAttributes = new SortedDictionary<uint, int>(),
                         mCountry = "",
-                        mDataMap = new SortedDictionary<uint, int>
-                        {
-                            { 0x00070047, 0 } //???
-                        },
+                        mDataMap = new SortedDictionary<uint, int>(),
                         mHardwareFlags = HardwareFlags.None,
-                        mLatencyList = new List<int>(),
-                        mQosData = new NetworkQosData
+                        mLatencyList = new List<int>
                         {
-                            mDownstreamBitsPerSecond = 10,
-                            mNatType = NatType.NAT_TYPE_OPEN,
-                            mUpstreamBitsPerSecond = 10
+                            10
                         },
+                        mQosData = default,
                         mUserInfoAttribute = 0,
                         mBlazeObjectIdList = new List<ulong>()
                     },
@@ -110,8 +86,8 @@ public class AuthenticationComponent : AuthenticationComponentBase.Server
 
     public override Task<NullStruct> LogoutAsync(NullStruct request, BlazeRpcContext context)
     {
-        var leaver = Manager.GetHockeyUser(context.BlazeConnection);
-        if (leaver != null) Manager.HockeyUsers.Remove(leaver);
+        var leaver = Manager.GetZamboniUser(context.BlazeConnection);
+        if (leaver != null) Manager.ZamboniUsers.Remove(leaver);
         return Task.FromResult(new NullStruct());
     }
 

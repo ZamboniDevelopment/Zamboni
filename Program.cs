@@ -15,23 +15,25 @@ namespace Zamboni;
 
 //((ip.src == 127.0.0.1) && (ip.dst == 127.0.0.1)) && tcp.port == 42100 || tcp.port == 13337 || tcp.port == 8999 || tcp.port == 9946 || tcp.port == 17502 || tcp.port == 17501 || tcp.port == 17500 || tcp.port == 17499
 // (ip.dst == 192.168.100.178 && ip.src == 192.168.1.79) || (ip.src == 192.168.100.178 && ip.dst == 192.168.1.79)
+//tcp.port == 8999 || tcp.port == 9946 || tcp.port == 17502 || tcp.port == 17501 || tcp.port == 17500 || tcp.port == 17499 || udp.port == 8999 || udp.port == 9946 || udp.port == 17502 || udp.port == 17501 || udp.port == 17500 || udp.port == 17499
+//tcp.port == 17499 || udp.port == 17499 || tcp.port == 3659|| udp.port == 3659
+// tcp.port == 17499 || udp.port == 17499 || tcp.port == 3659 || udp.port == 3659  || tcp.port == 17500 || udp.port == 17500 || tcp.port == 17501 || udp.port == 17501 || tcp.port == 17502 || udp.port == 17502 || tcp.port == 17503 || udp.port == 17503
 internal class Program
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     public static ZamboniConfig ZamboniConfig;
 
-    public static string MachineIp;
+    public static readonly string PublicIp = new HttpClient().GetStringAsync("https://checkip.amazonaws.com/").GetAwaiter().GetResult().Trim();
 
     private static async Task Main(string[] args)
     {
         InitConfig();
         StartLogger();
-        MachineIp = new HttpClient().GetStringAsync("https://checkip.amazonaws.com/").GetAwaiter().GetResult().Trim();
 
+        var commandTask = Task.Run(StartCommandListener);
         var redirectorTask = StartRedirectorServer();
         var coreTask = StartCoreServer();
-        var commandTask = Task.Run(StartCommandListener);
         Logger.Warn("Zamboni server started");
         await Task.WhenAll(redirectorTask, coreTask, commandTask);
     }
@@ -49,12 +51,12 @@ internal class Program
 
     private static void InitConfig()
     {
-        var configFile = "zamboni-config.yml";
+        const string configFile = "zamboni-config.yml";
         var deserializer = new DeserializerBuilder()
-            .WithNamingConvention(CamelCaseNamingConvention.Instance)
+            .WithNamingConvention(PascalCaseNamingConvention.Instance)
             .Build();
         var serializer = new SerializerBuilder()
-            .WithNamingConvention(CamelCaseNamingConvention.Instance)
+            .WithNamingConvention(PascalCaseNamingConvention.Instance)
             .Build();
 
         if (!File.Exists(configFile))
@@ -62,10 +64,9 @@ internal class Program
             ZamboniConfig = new ZamboniConfig();
             var yaml = serializer.Serialize(ZamboniConfig);
 
-            var comments =
-                "# Setting GameServerIp: 'auto' = automatically detect public IP or specify a manual IP address.\n" +
-                "# Setting GameServerPort: Port for GameServer to listen on.(Also open port 42100 on your host)\n" +
-                "# Setting LogLevel: Valid values: Trace, Debug, Info, Warn, Error, Fatal, Off.\n\n";
+            const string comments = "# GameServerIp: 'auto' = automatically detect public IP or specify a manual IP address, where GameServer is run on\n" +
+                                    "# GameServerPort: Port for GameServer to listen on. (Redirector server lives on 42100, clients request there)\n" +
+                                    "# LogLevel: Valid values: Trace, Debug, Info, Warn, Error, Fatal, Off.\n\n";
             File.WriteAllText(configFile, comments + yaml);
             Logger.Warn("Config file created: " + configFile);
             return;
@@ -120,14 +121,17 @@ internal class Program
 
                 case "status":
                     Logger.Warn(
-                        "Server running on ip: " + ZamboniConfig.GameServerIp + " (" + MachineIp + ")");
+                        "Server running on ip: " + ZamboniConfig.GameServerIp + " (" + PublicIp + ")");
                     Logger.Warn("GameServerPort port: " + ZamboniConfig.GameServerPort);
                     Logger.Warn("Redirector port: 42100");
-                    Logger.Warn("Connected Users: " + Manager.HockeyUsers.Count);
-                    foreach (var user in Manager.HockeyUsers) Logger.Warn(user.Username);
-
-                    Logger.Warn("Queued Users: " + Manager.QueuedHockeyUsers.Count);
-                    foreach (var qu in Manager.QueuedHockeyUsers) Logger.Warn(qu.Username);
+                    Logger.Warn("Online Users: " + Manager.ZamboniUsers.Count);
+                    foreach (var user in Manager.ZamboniUsers) Logger.Warn(user.Username);
+                    Logger.Warn("Queued Users: " + Manager.QueuedZamboniUsers.Count);
+                    foreach (var qu in Manager.QueuedZamboniUsers) Logger.Warn(qu.Username);
+                    Logger.Warn("Zamboni Games: " + Manager.ZamboniGames.Count);
+                    foreach (var zg in Manager.ZamboniGames)
+                    {
+                    }
 
                     break;
 
