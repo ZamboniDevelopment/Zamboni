@@ -16,6 +16,11 @@ public static class Manager
         return ZamboniUsers.FirstOrDefault(loopUser => loopUser.BlazeServerConnection.Equals(blazeServerConnection));
     }
 
+    public static ZamboniUser GetZamboniUser(ProtoFireConnection protoFireConnection)
+    {
+        return ZamboniUsers.FirstOrDefault(loopUser => loopUser.BlazeServerConnection.ProtoFireConnection.Equals(protoFireConnection));
+    }
+
     public static ZamboniUser GetZamboniUser(string name)
     {
         return ZamboniUsers.FirstOrDefault(loopUser => loopUser.Username.Equals(name));
@@ -24,5 +29,10 @@ public static class Manager
     public static ZamboniGame GetZamboniGame(uint id)
     {
         return ZamboniGames.FirstOrDefault(loopGame => loopGame.ReplicatedGameData.mGameId.Equals(id));
+    }
+
+    public static ZamboniGame GetZamboniGame(ZamboniUser zamboniUser)
+    {
+        return ZamboniGames.FirstOrDefault(loopGame => loopGame.ZamboniUsers.Contains(zamboniUser));
     }
 }
