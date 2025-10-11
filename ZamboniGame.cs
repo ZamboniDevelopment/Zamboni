@@ -33,7 +33,7 @@ public class ZamboniGame
         {
             mAdminPlayerList = new List<uint>
             {
-                (uint)host.UserId,
+                (uint)host.UserId
             },
             mGameAttribs = new SortedDictionary<string, string>
             {
@@ -127,6 +127,6 @@ public class ZamboniGame
 
     public override string ToString()
     {
-        return ZamboniUsers[0].Username+" and "+ZamboniUsers[1].Username +" gameId:" + GameId+" state: "+ReplicatedGameData.mGameState;
+        return ZamboniUsers[0].Username + " and " + ZamboniUsers[1].Username + " gameId:" + GameId + " state: " + ReplicatedGameData.mGameState;
     }
 }

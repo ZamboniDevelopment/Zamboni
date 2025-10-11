@@ -19,13 +19,13 @@ public class GameManagerComponent : GameManagerBase.Server
         Manager.QueuedZamboniUsers.Remove(hockeyUserB);
         SendToGame(hockeyUserA, hockeyUserB);
     }
-    
+
     private static void SendToGame(ZamboniUser host, ZamboniUser notHost)
     {
         var zamboniGame = new ZamboniGame(host, notHost);
         Manager.ZamboniGames.Add(zamboniGame);
         // zamboniGame.AddOpponent(notHost);
-        
+
         NotifyGameCreatedAsync(host.BlazeServerConnection, new NotifyGameCreated
         {
             mGameId = zamboniGame.GameId
@@ -35,7 +35,7 @@ public class GameManagerComponent : GameManagerBase.Server
         {
             mGameId = zamboniGame.GameId
         });
-        
+
         NotifyMatchmakingFinishedAsync(host.BlazeServerConnection, new NotifyMatchmakingFinished
         {
             mFitScore = 10,
@@ -54,10 +54,10 @@ public class GameManagerComponent : GameManagerBase.Server
             mMatchmakingResult = MatchmakingResult.SUCCESS_JOINED_NEW_GAME,
             mUserSessionId = (uint)notHost.UserId
         });
-        
-        
+
+
         //This is not really a right solution, but works somehow for now...
-        
+
         Task.Run(async () =>
         {
             await Task.Delay(10);
@@ -69,7 +69,7 @@ public class GameManagerComponent : GameManagerBase.Server
                 mMatchmakingSessionId = (uint)host.UserId,
                 mGameRoster = zamboniGame.ReplicatedGamePlayers
             });
-            
+
             await NotifyJoinGameAsync(notHost.BlazeServerConnection, new NotifyJoinGame
             {
                 mJoinErr = 0,
@@ -77,10 +77,7 @@ public class GameManagerComponent : GameManagerBase.Server
                 mMatchmakingSessionId = (uint)notHost.UserId,
                 mGameRoster = zamboniGame.ReplicatedGamePlayers
             });
-            
         });
-
-        
     }
 
     public override Task<StartMatchmakingResponse> StartMatchmakingAsync(StartMatchmakingRequest request, BlazeRpcContext context)
@@ -111,7 +108,7 @@ public class GameManagerComponent : GameManagerBase.Server
 
     public override Task<NullStruct> RemovePlayerAsync(RemovePlayerRequest request, BlazeRpcContext context)
     {
-        ZamboniGame zamboniGame = Manager.GetZamboniGame(request.mGameId);
+        var zamboniGame = Manager.GetZamboniGame(request.mGameId);
         if (zamboniGame == null) return Task.FromResult(new NullStruct());
         foreach (var zamboniUser in zamboniGame.ZamboniUsers)
         {
@@ -130,9 +127,9 @@ public class GameManagerComponent : GameManagerBase.Server
                 mPlayerRemovedReason = PlayerRemovedReason.GAME_DESTROYED
             });
         }
-        
+
         Manager.ZamboniGames.Remove(zamboniGame);
-        
+
         return Task.FromResult(new NullStruct());
     }
 
@@ -215,9 +212,8 @@ public class GameManagerComponent : GameManagerBase.Server
 
     public override Task<NullStruct> UpdateMeshConnectionAsync(UpdateMeshConnectionRequest request, BlazeRpcContext context)
     {
-        
         var zamboniGame = Manager.GetZamboniGame(request.mGameId);
-        
+
         if (zamboniGame == null) return Task.FromResult(new NullStruct());
 
         foreach (var zamboniUser in zamboniGame.ZamboniUsers)
