@@ -4,8 +4,10 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Blaze2SDK;
+using BlazeCommon;
 using NLog;
 using NLog.Layouts;
+using Tdf;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using Zamboni.Components.Blaze;
@@ -85,7 +87,9 @@ internal class Program
 
     private static async Task StartCoreServer()
     {
-        var core = Blaze2.CreateBlazeServer("CoreServer", new IPEndPoint(IPAddress.Any, ZamboniConfig.GameServerPort));
+        var tdfFactory = new TdfFactory();
+        var config = new BlazeServerConfiguration("CoreServer", new IPEndPoint(IPAddress.Any, ZamboniConfig.GameServerPort), tdfFactory.CreateLegacyEncoder(), tdfFactory.CreateLegacyDecoder());
+        var core = new ZamboniCoreServer(config);
         core.AddComponent<UtilComponent>();
         core.AddComponent<AuthenticationComponent>();
         core.AddComponent<UserSessionsComponent>();
@@ -120,8 +124,7 @@ internal class Program
                     break;
 
                 case "status":
-                    Logger.Info(
-                        "Server running on ip: " + ZamboniConfig.GameServerIp + " (" + PublicIp + ")");
+                    Logger.Info("Server running on ip: " + ZamboniConfig.GameServerIp + " (" + PublicIp + ")");
                     Logger.Info("GameServerPort port: " + ZamboniConfig.GameServerPort);
                     Logger.Info("Redirector port: 42100");
                     Logger.Info("Online Users: " + Manager.ZamboniUsers.Count);
