@@ -16,15 +16,7 @@ public class ZamboniGame
         ZamboniUsers.Add(notHost);
         ReplicatedGamePlayers.Add(host.ToReplicatedGamePlayer(0, GameId));
         ReplicatedGamePlayers.Add(notHost.ToReplicatedGamePlayer(1, GameId));
-        ReplicatedGameData = CreateZamboniRankedGameData(host);
-    }
-
-    public ZamboniGame(ZamboniUser host)
-    {
-        GameId = _gameIdCounter++;
-        ZamboniUsers.Add(host);
-        ReplicatedGamePlayers.Add(host.ToReplicatedGamePlayer(0, GameId));
-        ReplicatedGameData = CreateZamboniRankedGameData(host);
+        ReplicatedGameData = CreateZamboniRankedGameData(host, notHost);
     }
 
     public uint GameId { get; }
@@ -34,14 +26,14 @@ public class ZamboniGame
     public ReplicatedGameData ReplicatedGameData { get; set; }
     public List<ReplicatedGamePlayer> ReplicatedGamePlayers { get; set; } = new();
 
-    private ReplicatedGameData CreateZamboniRankedGameData(ZamboniUser host)
+    private ReplicatedGameData CreateZamboniRankedGameData(ZamboniUser host, ZamboniUser notHost)
 
     {
         return new ReplicatedGameData
         {
             mAdminPlayerList = new List<uint>
             {
-                (uint)host.UserId
+                (uint)host.UserId,
             },
             mGameAttribs = new SortedDictionary<string, string>
             {
@@ -135,6 +127,6 @@ public class ZamboniGame
 
     public override string ToString()
     {
-        return base.ToString();
+        return ZamboniUsers[0].Username+" and "+ZamboniUsers[1].Username +" gameId:" + GameId+" state: "+ReplicatedGameData.mGameState;
     }
 }

@@ -105,7 +105,7 @@ internal class Program
 
     private static void StartCommandListener()
     {
-        Logger.Warn("Type 'help' or 'status'.");
+        Logger.Info("Type 'help' or 'status'.");
 
         while (true)
         {
@@ -120,23 +120,20 @@ internal class Program
                     break;
 
                 case "status":
-                    Logger.Warn(
+                    Logger.Info(
                         "Server running on ip: " + ZamboniConfig.GameServerIp + " (" + PublicIp + ")");
-                    Logger.Warn("GameServerPort port: " + ZamboniConfig.GameServerPort);
-                    Logger.Warn("Redirector port: 42100");
-                    Logger.Warn("Online Users: " + Manager.ZamboniUsers.Count);
-                    foreach (var user in Manager.ZamboniUsers) Logger.Warn(user.Username);
-                    Logger.Warn("Queued Users: " + Manager.QueuedZamboniUsers.Count);
-                    foreach (var qu in Manager.QueuedZamboniUsers) Logger.Warn(qu.Username);
-                    Logger.Warn("Zamboni Games: " + Manager.ZamboniGames.Count);
-                    foreach (var zg in Manager.ZamboniGames)
-                    {
-                    }
-
+                    Logger.Info("GameServerPort port: " + ZamboniConfig.GameServerPort);
+                    Logger.Info("Redirector port: 42100");
+                    Logger.Info("Online Users: " + Manager.ZamboniUsers.Count);
+                    foreach (var user in Manager.ZamboniUsers) Logger.Info(user.Username);
+                    Logger.Info("Queued Users: " + Manager.QueuedZamboniUsers.Count);
+                    foreach (var qu in Manager.QueuedZamboniUsers) Logger.Info(qu.Username);
+                    Logger.Info("Zamboni Games: " + Manager.ZamboniGames.Count);
+                    foreach (var zg in Manager.ZamboniGames) Logger.Info(zg);
                     break;
 
                 default:
-                    Logger.Warn($"Unknown command: {input}");
+                    Logger.Info($"Unknown command: {input}");
                     break;
             }
         }

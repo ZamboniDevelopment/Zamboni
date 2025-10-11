@@ -36,7 +36,7 @@ public class ZamboniUser
             mNetworkAddress = NetworkInfo.mAddress,
             mSlotId = slot,
             mSlotType = SlotType.SLOT_PRIVATE,
-            mPlayerState = PlayerState.ACTIVE_CONNECTED,
+            mPlayerState = PlayerState.ACTIVE_CONNECTING,
             mPlayerSessionId = (uint)UserId //TODO ????
         };
     }
