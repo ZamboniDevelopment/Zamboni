@@ -22,6 +22,8 @@ namespace Zamboni;
 // tcp.port == 17499 || udp.port == 17499 || tcp.port == 3659 || udp.port == 3659  || tcp.port == 17500 || udp.port == 17500 || tcp.port == 17501 || udp.port == 17501 || tcp.port == 17502 || udp.port == 17502 || tcp.port == 17503 || udp.port == 17503
 internal class Program
 {
+    public const string Version = "1.0";
+
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     public static ZamboniConfig ZamboniConfig;
@@ -36,7 +38,7 @@ internal class Program
         var commandTask = Task.Run(StartCommandListener);
         var redirectorTask = StartRedirectorServer();
         var coreTask = StartCoreServer();
-        Logger.Warn("Zamboni server started");
+        Logger.Warn("Zamboni server " + Version + " started");
         await Task.WhenAll(redirectorTask, coreTask, commandTask);
     }
 
@@ -124,6 +126,7 @@ internal class Program
                     break;
 
                 case "status":
+                    Logger.Info("Zamboni " + Version);
                     Logger.Info("Server running on ip: " + ZamboniConfig.GameServerIp + " (" + PublicIp + ")");
                     Logger.Info("GameServerPort port: " + ZamboniConfig.GameServerPort);
                     Logger.Info("Redirector port: 42100");

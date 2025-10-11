@@ -59,7 +59,7 @@ public class UtilComponent : UtilComponentBase.Server
                 },
                 mServiceId = 1
             },
-            mServerVersion = "Zamboni 1.0"
+            mServerVersion = "Zamboni " + Program.Version
         });
     }
 
