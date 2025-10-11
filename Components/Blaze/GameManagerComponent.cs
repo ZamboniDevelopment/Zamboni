@@ -222,20 +222,49 @@ public class GameManagerComponent : GameManagerBase.Server
         var zamboniGame = Manager.GetZamboniGame(request.mGameId);
         if (zamboniGame == null) return Task.FromResult(new NullStruct());
 
-        foreach (var zamboniUser in zamboniGame.ZamboniUsers)
-            NotifyGamePlayerStateChangeAsync(zamboniUser.BlazeServerConnection, new NotifyGamePlayerStateChange
-            {
-                mGameId = request.mGameId,
-                mPlayerId = request.mMeshConnectionStatusList[0].mTargetPlayer,
-                mPlayerState = PlayerState.ACTIVE_CONNECTED
-            });
+        var playerConnectionStatus = request.mMeshConnectionStatusList[0];
 
-        foreach (var zamboniUser in zamboniGame.ZamboniUsers)
-            NotifyPlayerJoinCompletedAsync(zamboniUser.BlazeServerConnection, new NotifyPlayerJoinCompleted
+        if (playerConnectionStatus.mPlayerNetConnectionStatus.Equals(PlayerNetConnectionStatus.CONNECTED))
+        {
+            foreach (var zamboniUser in zamboniGame.ZamboniUsers)
+                NotifyGamePlayerStateChangeAsync(zamboniUser.BlazeServerConnection, new NotifyGamePlayerStateChange
+                {
+                    mGameId = request.mGameId,
+                    mPlayerId = playerConnectionStatus.mTargetPlayer,
+                    mPlayerState = PlayerState.ACTIVE_CONNECTED
+                });
+
+            foreach (var zamboniUser in zamboniGame.ZamboniUsers)
+                NotifyPlayerJoinCompletedAsync(zamboniUser.BlazeServerConnection, new NotifyPlayerJoinCompleted
+                {
+                    mGameId = request.mGameId,
+                    mPlayerId = playerConnectionStatus.mTargetPlayer
+                });
+        }
+        else
+        {
+            foreach (var zamboniUser in zamboniGame.ZamboniUsers)
             {
-                mGameId = request.mGameId,
-                mPlayerId = request.mMeshConnectionStatusList[0].mTargetPlayer
-            });
+                NotifyPlayerRemovedAsync(zamboniUser.BlazeServerConnection, new NotifyPlayerRemoved
+                {
+                    mPlayerRemovedTitleContext = 0,
+                    mGameId = request.mGameId,
+                    mPlayerId = (uint)zamboniGame.ZamboniUsers[0].UserId,
+                    mPlayerRemovedReason = PlayerRemovedReason.GAME_DESTROYED
+                });
+                NotifyPlayerRemovedAsync(zamboniUser.BlazeServerConnection, new NotifyPlayerRemoved
+                {
+                    mPlayerRemovedTitleContext = 0,
+                    mGameId = request.mGameId,
+                    mPlayerId = (uint)zamboniGame.ZamboniUsers[1].UserId,
+                    mPlayerRemovedReason = PlayerRemovedReason.GAME_DESTROYED
+                });
+            }
+
+            Manager.ZamboniGames.Remove(zamboniGame);
+        }
+
+
         return Task.FromResult(new NullStruct());
     }
 }

@@ -13,27 +13,28 @@ public class UserSessionsComponent : UserSessionsBase.Server
         var zamboniUser = Manager.GetZamboniUser(context.BlazeConnection);
         zamboniUser.NetworkInfo = request;
 
-        NotifyUserSessionExtendedDataUpdateAsync(context.BlazeConnection,
-            new UserSessionExtendedDataUpdate
-            {
-                mExtendedData = new UserSessionExtendedData
+        foreach (var onlineUser in Manager.ZamboniUsers)
+            NotifyUserSessionExtendedDataUpdateAsync(onlineUser.BlazeServerConnection,
+                new UserSessionExtendedDataUpdate
                 {
-                    mAddress = request.mAddress,
-                    mBestPingSiteAlias = "qos",
-                    mClientAttributes = new SortedDictionary<uint, int>(),
-                    mCountry = "",
-                    mDataMap = new SortedDictionary<uint, int>(),
-                    mHardwareFlags = HardwareFlags.None,
-                    mLatencyList = new List<int>
+                    mExtendedData = new UserSessionExtendedData
                     {
-                        10
+                        mAddress = request.mAddress,
+                        mBestPingSiteAlias = "qos",
+                        mClientAttributes = new SortedDictionary<uint, int>(),
+                        mCountry = "",
+                        mDataMap = new SortedDictionary<uint, int>(),
+                        mHardwareFlags = HardwareFlags.None,
+                        mLatencyList = new List<int>
+                        {
+                            10
+                        },
+                        mQosData = request.mQosData,
+                        mUserInfoAttribute = 0,
+                        mBlazeObjectIdList = new List<ulong>()
                     },
-                    mQosData = request.mQosData,
-                    mUserInfoAttribute = 0,
-                    mBlazeObjectIdList = new List<ulong>()
-                },
-                mUserId = (uint)zamboniUser.UserId
-            });
+                    mUserId = (uint)zamboniUser.UserId
+                });
 
         return Task.FromResult(new NullStruct());
     }

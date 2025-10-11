@@ -25,40 +25,42 @@ public class AuthenticationComponent : AuthenticationComponentBase.Server
         Task.Run(async () =>
         {
             await Task.Delay(100);
-            UserSessionsBase.Server.NotifyUserAddedAsync(context.BlazeConnection, new UserIdentification
-            {
-                mAccountLocale = 1701729619,
-                mExternalId = ticket.UserId,
-                mBlazeId = (uint)ticket.UserId,
-                mName = ticket.OnlineId,
-                mPersonaId = ticket.OnlineId
-            });
+            foreach (var onlineUser in Manager.ZamboniUsers)
+                UserSessionsBase.Server.NotifyUserAddedAsync(onlineUser.BlazeServerConnection, new UserIdentification
+                {
+                    mAccountLocale = 1701729619,
+                    mExternalId = ticket.UserId,
+                    mBlazeId = (uint)ticket.UserId,
+                    mName = ticket.OnlineId,
+                    mPersonaId = ticket.OnlineId
+                });
         });
 
         Task.Run(async () =>
         {
             await Task.Delay(200);
-            UserSessionsBase.Server.NotifyUserSessionExtendedDataUpdateAsync(context.BlazeConnection,
-                new UserSessionExtendedDataUpdate
-                {
-                    mExtendedData = new UserSessionExtendedData
+            foreach (var onlineUser in Manager.ZamboniUsers)
+                UserSessionsBase.Server.NotifyUserSessionExtendedDataUpdateAsync(onlineUser.BlazeServerConnection,
+                    new UserSessionExtendedDataUpdate
                     {
-                        mAddress = null!,
-                        mBestPingSiteAlias = "qos",
-                        mClientAttributes = new SortedDictionary<uint, int>(),
-                        mCountry = "",
-                        mDataMap = new SortedDictionary<uint, int>(),
-                        mHardwareFlags = HardwareFlags.None,
-                        mLatencyList = new List<int>
+                        mExtendedData = new UserSessionExtendedData
                         {
-                            10
+                            mAddress = null!,
+                            mBestPingSiteAlias = "qos",
+                            mClientAttributes = new SortedDictionary<uint, int>(),
+                            mCountry = "",
+                            mDataMap = new SortedDictionary<uint, int>(),
+                            mHardwareFlags = HardwareFlags.None,
+                            mLatencyList = new List<int>
+                            {
+                                10
+                            },
+                            mQosData = default,
+                            mUserInfoAttribute = 0,
+                            mBlazeObjectIdList = new List<ulong>()
                         },
-                        mQosData = default,
-                        mUserInfoAttribute = 0,
-                        mBlazeObjectIdList = new List<ulong>()
-                    },
-                    mUserId = (uint)ticket.UserId
-                });
+                        mUserId = (uint)ticket.UserId
+                    });
         });
 
         return Task.FromResult(new ConsoleLoginResponse
