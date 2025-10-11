@@ -19,7 +19,7 @@ public class AuthenticationComponent : AuthenticationComponentBase.Server
         var ticket = new XI5Ticket(request.mPS3Ticket);
 
         Logger.Warn(ticket.OnlineId + " connected");
-        foreach (var hockeyUser in Manager.ZamboniUsers.ToList().Where(hockeyUser => hockeyUser.Username.Equals(ticket.OnlineId))) Manager.ZamboniUsers.Remove(hockeyUser);
+        foreach (var zamboniUser in Manager.ZamboniUsers.ToList().Where(zamboniUser => zamboniUser.Username.Equals(ticket.OnlineId))) Manager.ZamboniUsers.Remove(zamboniUser);
         Manager.ZamboniUsers.Add(new ZamboniUser(context.BlazeConnection, ticket.UserId, ticket.OnlineId));
 
         Task.Run(async () =>
