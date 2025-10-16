@@ -21,6 +21,11 @@ public static class Manager
         return ZamboniUsers.FirstOrDefault(loopUser => loopUser.BlazeServerConnection.ProtoFireConnection.Equals(protoFireConnection));
     }
 
+    public static ZamboniUser GetZamboniUser(ulong messengerId)
+    {
+        return ZamboniUsers.FirstOrDefault(loopUser => loopUser.MessengerId.Equals(messengerId));
+    }
+
     public static ZamboniUser GetZamboniUser(string name)
     {
         return ZamboniUsers.FirstOrDefault(loopUser => loopUser.Username.Equals(name));
