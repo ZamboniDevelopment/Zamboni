@@ -24,7 +24,6 @@ public class GameManagerComponent : GameManagerBase.Server
     private static void SendToGame(ZamboniUser host, ZamboniUser notHost)
     {
         var zamboniGame = new ZamboniGame(host, notHost);
-        Manager.ZamboniGames.Add(zamboniGame);
 
         NotifyGameCreatedAsync(host.BlazeServerConnection, new NotifyGameCreated
         {
@@ -107,6 +106,79 @@ public class GameManagerComponent : GameManagerBase.Server
         Logger.Info(zamboniUser.Username + " unqueued");
         return Task.FromResult(new NullStruct());
     }
+    //STILL WIP
+
+    //
+    // public override Task<CreateGameResponse> CreateGameAsync(CreateGameRequest request, BlazeRpcContext context)
+    // {
+    //     var host = Manager.GetZamboniUser(context.BlazeConnection);
+    //     var zamboniGame = new ZamboniGame(host, request);
+    //
+    //     
+    //     Task.Run(async () =>
+    //     {
+    //         await Task.Delay(100);
+    //
+    //         await NotifyJoinGameAsync(context.BlazeConnection, new NotifyJoinGame
+    //         {
+    //             mJoinErr = 0,
+    //             mGameData = zamboniGame.ReplicatedGameData,
+    //             mMatchmakingSessionId = 0,
+    //             mGameRoster = zamboniGame.ReplicatedGamePlayers
+    //         });
+    //     });
+    //
+    //     
+    //     return Task.FromResult(new CreateGameResponse
+    //     {
+    //         mGameData = zamboniGame.ReplicatedGameData,
+    //         mGameId = zamboniGame.GameId,
+    //         mHostId = (uint)host.UserId,
+    //         mGameRoster = zamboniGame.ReplicatedGamePlayers
+    //     });
+    // }
+    //
+    // public override Task<JoinGameResponse> JoinGameAsync(JoinGameRequest request, BlazeRpcContext context)
+    // {
+    //     
+    //     var accepter = Manager.GetZamboniUser(context.BlazeConnection);
+    //     var game = Manager.GetZamboniGame(request.mGameId);
+    //     game.ZamboniUsers.Add(accepter);
+    //     game.ReplicatedGamePlayers.Add(accepter.ToReplicatedGamePlayer(1, game.GameId)); //TODO SLOT
+    //     
+    //     Task.Run(async () =>
+    //     {
+    //         await Task.Delay(500);
+    //     
+    //         // await NotifyJoinGameAsync(context.BlazeConnection, new NotifyJoinGame
+    //         // {
+    //         //     mJoinErr = 0,
+    //         //     mGameData = game.ReplicatedGameData,
+    //         //     mMatchmakingSessionId = 0,
+    //         //     mGameRoster = game.ReplicatedGamePlayers
+    //         // });
+    //         await NotifyGameCreatedAsync(game.ZamboniUsers[1].BlazeServerConnection, new NotifyGameCreated
+    //         {
+    //             mGameId = game.GameId
+    //         });
+    //         await NotifyPlayerJoiningAsync(game.ZamboniUsers[0].BlazeServerConnection, new NotifyPlayerJoining
+    //         {
+    //             mGameId = game.GameId,
+    //             mJoiningPlayer = accepter.ToReplicatedGamePlayer(1,game.GameId)
+    //         });
+    //         await NotifyPlayerJoiningAsync(game.ZamboniUsers[1].BlazeServerConnection, new NotifyPlayerJoining
+    //         {
+    //             mGameId = game.GameId,
+    //             mJoiningPlayer = accepter.ToReplicatedGamePlayer(1,game.GameId)
+    //         });
+    //     });
+    //
+    //     
+    //     return Task.FromResult(new JoinGameResponse
+    //     {
+    //         mGameId = request.mGameId
+    //     });
+    // }
 
     public override Task<NullStruct> RemovePlayerAsync(RemovePlayerRequest request, BlazeRpcContext context)
     {
