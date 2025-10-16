@@ -7,17 +7,23 @@ namespace Zamboni;
 
 public class ZamboniUser
 {
+    private const ulong MessengerPrefix = 0x7802000100000000;
+
     public ZamboniUser(BlazeServerConnection blazeServerConnection, ulong userId, string username)
     {
         BlazeServerConnection = blazeServerConnection;
         UserId = userId;
         Username = username;
+        MessengerId = MessengerPrefix | userId;
+        Manager.ZamboniUsers.Add(this);
     }
 
     public NetworkInfo NetworkInfo { get; set; }
     public BlazeServerConnection BlazeServerConnection { get; }
     public ulong UserId { get; }
     public string Username { get; }
+
+    public ulong MessengerId { get; }
 
     public ReplicatedGamePlayer ToReplicatedGamePlayer(byte slot, uint gameId)
     {

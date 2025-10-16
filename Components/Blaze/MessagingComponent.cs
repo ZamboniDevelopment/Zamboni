@@ -7,11 +7,40 @@ namespace Zamboni.Components.Blaze;
 
 internal class MessagingComponent : MessagingComponentBase.Server
 {
+    private static uint _messageIdCounter = 1;
+
     public override Task<FetchMessageResponse> FetchMessagesAsync(FetchMessageRequest request, BlazeRpcContext context)
     {
         return Task.FromResult(new FetchMessageResponse
         {
             mCount = 0
+        });
+    }
+
+    public override Task<PurgeMessageResponse> PurgeMessagesAsync(PurgeMessageRequest request, BlazeRpcContext context)
+    {
+        return Task.FromResult(new PurgeMessageResponse
+        {
+            mCount = 1
+        });
+    }
+
+    public override Task<SendMessageResponse> SendMessageAsync(ClientMessage request, BlazeRpcContext context)
+    {
+        var messageId = ++_messageIdCounter;
+        NotifyMessageAsync(Manager.GetZamboniUser(request.mTarget).BlazeServerConnection, new ServerMessage
+        {
+            mFlags = 0,
+            mMessageId = messageId,
+            mSourceName = Manager.GetZamboniUser(context.BlazeConnection).Username,
+            mPayload = request,
+            mSource = Manager.GetZamboniUser(context.BlazeConnection).MessengerId,
+            mTimestamp = 0
+        });
+
+        return Task.FromResult(new SendMessageResponse
+        {
+            mMessageId = messageId
         });
     }
 }
