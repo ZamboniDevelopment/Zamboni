@@ -20,47 +20,45 @@ public class AuthenticationComponent : AuthenticationComponentBase.Server
 
         Logger.Warn(ticket.OnlineId + " connected");
         foreach (var zamboniUser in Manager.ZamboniUsers.ToList().Where(zamboniUser => zamboniUser.Username.Equals(ticket.OnlineId))) Manager.ZamboniUsers.Remove(zamboniUser);
-        Manager.ZamboniUsers.Add(new ZamboniUser(context.BlazeConnection, ticket.UserId, ticket.OnlineId));
+        var user = new ZamboniUser(context.BlazeConnection, ticket.UserId, ticket.OnlineId);
 
         Task.Run(async () =>
         {
             await Task.Delay(100);
-            foreach (var onlineUser in Manager.ZamboniUsers)
-                UserSessionsBase.Server.NotifyUserAddedAsync(onlineUser.BlazeServerConnection, new UserIdentification
-                {
-                    mAccountLocale = 1701729619,
-                    mExternalId = ticket.UserId,
-                    mBlazeId = (uint)ticket.UserId,
-                    mName = ticket.OnlineId,
-                    mPersonaId = ticket.OnlineId
-                });
+            UserSessionsBase.Server.NotifyUserAddedAsync(user.BlazeServerConnection, new UserIdentification
+            {
+                mAccountLocale = 1701729619,
+                mExternalId = ticket.UserId,
+                mBlazeId = (uint)ticket.UserId,
+                mName = ticket.OnlineId,
+                mPersonaId = ticket.OnlineId
+            });
         });
 
         Task.Run(async () =>
         {
             await Task.Delay(200);
-            foreach (var onlineUser in Manager.ZamboniUsers)
-                UserSessionsBase.Server.NotifyUserSessionExtendedDataUpdateAsync(onlineUser.BlazeServerConnection,
-                    new UserSessionExtendedDataUpdate
+            UserSessionsBase.Server.NotifyUserSessionExtendedDataUpdateAsync(user.BlazeServerConnection,
+                new UserSessionExtendedDataUpdate
+                {
+                    mExtendedData = new UserSessionExtendedData
                     {
-                        mExtendedData = new UserSessionExtendedData
+                        mAddress = null!,
+                        mBestPingSiteAlias = "qos",
+                        mClientAttributes = new SortedDictionary<uint, int>(),
+                        mCountry = "",
+                        mDataMap = new SortedDictionary<uint, int>(),
+                        mHardwareFlags = HardwareFlags.None,
+                        mLatencyList = new List<int>
                         {
-                            mAddress = null!,
-                            mBestPingSiteAlias = "qos",
-                            mClientAttributes = new SortedDictionary<uint, int>(),
-                            mCountry = "",
-                            mDataMap = new SortedDictionary<uint, int>(),
-                            mHardwareFlags = HardwareFlags.None,
-                            mLatencyList = new List<int>
-                            {
-                                10
-                            },
-                            mQosData = default,
-                            mUserInfoAttribute = 0,
-                            mBlazeObjectIdList = new List<ulong>()
+                            10
                         },
-                        mUserId = (uint)ticket.UserId
-                    });
+                        mQosData = default,
+                        mUserInfoAttribute = 0,
+                        mBlazeObjectIdList = new List<ulong>()
+                    },
+                    mUserId = (uint)ticket.UserId
+                });
         });
 
         return Task.FromResult(new ConsoleLoginResponse
