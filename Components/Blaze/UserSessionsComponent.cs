@@ -69,9 +69,7 @@ public class UserSessionsComponent : UserSessionsBase.Server
             {
                 mAccountId = (long)target.UserId,
                 mAccountLocale = 1701729619,
-                mExternalBlob = new byte[]
-                {
-                },
+                mExternalBlob = target.ExternalBlob,
                 mExternalId = target.UserId,
                 mBlazeId = (uint)target.UserId,
                 mName = target.Username,

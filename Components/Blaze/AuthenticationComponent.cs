@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Blaze2SDK.Blaze;
 using Blaze2SDK.Blaze.Authentication;
@@ -18,9 +19,22 @@ public class AuthenticationComponent : AuthenticationComponentBase.Server
     {
         var ticket = new XI5Ticket(request.mPS3Ticket);
 
+        //Still unsure what EXBB is. Research concluded its
+        //`externalblob` binary(36) DEFAULT NULL COMMENT 'sizeof(SceNpId)==36',
+        //"SceNpId", Its 36 bytes long, it starts with PSN Username and suffixed with other data in the end
+        //This taken straight from https://github.com/hallofmeat/Skateboard3Server/blob/master/src/Skateboard3Server.Blaze/Handlers/Authentication/LoginHandler.cs
+        var externalBlob = new List<byte>();
+        externalBlob.AddRange(Encoding.ASCII.GetBytes(ticket.OnlineId.PadRight(20, '\0')));
+        externalBlob.AddRange(Encoding.ASCII.GetBytes(ticket.Domain));
+        externalBlob.AddRange(Encoding.ASCII.GetBytes(ticket.Region));
+        externalBlob.AddRange(Encoding.ASCII.GetBytes("ps3"));
+        externalBlob.Add(0x0);
+        externalBlob.Add(0x1);
+        externalBlob.AddRange(new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
+
         Logger.Warn(ticket.OnlineId + " connected");
         foreach (var zamboniUser in Manager.ZamboniUsers.ToList().Where(zamboniUser => zamboniUser.Username.Equals(ticket.OnlineId))) Manager.ZamboniUsers.Remove(zamboniUser);
-        var user = new ZamboniUser(context.BlazeConnection, ticket.UserId, ticket.OnlineId);
+        var user = new ZamboniUser(context.BlazeConnection, ticket.UserId, ticket.OnlineId, externalBlob.ToArray());
 
         Task.Run(async () =>
         {
@@ -31,7 +45,8 @@ public class AuthenticationComponent : AuthenticationComponentBase.Server
                 mExternalId = ticket.UserId,
                 mBlazeId = (uint)ticket.UserId,
                 mName = ticket.OnlineId,
-                mPersonaId = ticket.OnlineId
+                mPersonaId = ticket.OnlineId,
+                mExternalBlob = externalBlob.ToArray()
             });
         });
 

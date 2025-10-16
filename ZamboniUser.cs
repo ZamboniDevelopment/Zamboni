@@ -9,12 +9,13 @@ public class ZamboniUser
 {
     private const ulong MessengerPrefix = 0x7802000100000000;
 
-    public ZamboniUser(BlazeServerConnection blazeServerConnection, ulong userId, string username)
+    public ZamboniUser(BlazeServerConnection blazeServerConnection, ulong userId, string username, byte[] externalBlob)
     {
         BlazeServerConnection = blazeServerConnection;
         UserId = userId;
         Username = username;
         MessengerId = MessengerPrefix | userId;
+        ExternalBlob = externalBlob;
         Manager.ZamboniUsers.Add(this);
     }
 
@@ -22,6 +23,8 @@ public class ZamboniUser
     public BlazeServerConnection BlazeServerConnection { get; }
     public ulong UserId { get; }
     public string Username { get; }
+
+    public byte[] ExternalBlob { get; }
 
     public ulong MessengerId { get; }
 
