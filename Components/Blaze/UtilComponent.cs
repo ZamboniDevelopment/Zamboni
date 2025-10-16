@@ -27,6 +27,7 @@ public class UtilComponent : UtilComponentBase.Server
                 15,
                 21,
                 30722,
+                12,
 
                 2049, // NHL10 Specific Component
                 69 // NHL10 Specific Component
