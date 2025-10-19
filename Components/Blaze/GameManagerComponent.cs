@@ -13,12 +13,22 @@ public class GameManagerComponent : GameManagerBase.Server
 
     private static void Trigger()
     {
-        if (Manager.QueuedZamboniUsers.Capacity < 2) return;
-        var hockeyUserA = Manager.QueuedZamboniUsers[0];
-        var hockeyUserB = Manager.QueuedZamboniUsers[1];
-        Manager.QueuedZamboniUsers.Remove(hockeyUserA);
-        Manager.QueuedZamboniUsers.Remove(hockeyUserB);
-        SendToGame(hockeyUserA, hockeyUserB);
+        if (Manager.QueuedMatchZamboniUsers.Count >= 2)
+        {
+            var hockeyUserA = Manager.QueuedMatchZamboniUsers[0];
+            var hockeyUserB = Manager.QueuedMatchZamboniUsers[1];
+            Manager.QueuedMatchZamboniUsers.Remove(hockeyUserA);
+            Manager.QueuedMatchZamboniUsers.Remove(hockeyUserB);
+            SendToRankedMatchGame(hockeyUserA, hockeyUserB, false);
+        }
+        if (Manager.QueuedShootoutZamboniUsers.Count >= 2)
+        {
+            var hockeyUserA = Manager.QueuedShootoutZamboniUsers[0];
+            var hockeyUserB = Manager.QueuedShootoutZamboniUsers[1];
+            Manager.QueuedShootoutZamboniUsers.Remove(hockeyUserA);
+            Manager.QueuedShootoutZamboniUsers.Remove(hockeyUserB);
+            SendToRankedMatchGame(hockeyUserA, hockeyUserB, true);
+        }
     }
 
     private static void SendToGame(ZamboniUser host, ZamboniUser notHost)
