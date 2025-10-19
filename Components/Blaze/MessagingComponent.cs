@@ -28,7 +28,16 @@ internal class MessagingComponent : MessagingComponentBase.Server
     public override Task<SendMessageResponse> SendMessageAsync(ClientMessage request, BlazeRpcContext context)
     {
         var messageId = ++_messageIdCounter;
-        NotifyMessageAsync(Manager.GetZamboniUser(request.mTarget).BlazeServerConnection, new ServerMessage
+        var target = Manager.GetZamboniUser(request.mTarget);
+
+        //If target is offline, we should store the message and send it when he comes online (Not a priority)
+        if (target == null)
+            return Task.FromResult(new SendMessageResponse
+            {
+                mMessageId = messageId
+            });
+
+        NotifyMessageAsync(target.BlazeServerConnection, new ServerMessage
         {
             mFlags = 0,
             mMessageId = messageId,
