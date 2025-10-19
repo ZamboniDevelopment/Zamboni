@@ -164,6 +164,9 @@ public class ZamboniGame
 
     public override string ToString()
     {
-        return ZamboniUsers[0].Username + " and " + ZamboniUsers[1].Username + " gameId:" + GameId + " state: " + ReplicatedGameData.mGameState;
-    }
+        return "Players: " + 
+               string.Join(", ", ZamboniUsers.Select(zamboniUser => zamboniUser.Username)) + 
+               " gameId:" + GameId + 
+               " state: " + ReplicatedGameData.mGameState + 
+               " type (1 ranked game 2 shootout): " + ReplicatedGameData.mGameAttribs["OSDK_gameMode"];    }
 }
