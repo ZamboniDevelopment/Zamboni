@@ -162,6 +162,39 @@ public class ZamboniGame
         };
     }
 
+    private ReplicatedGameData CreateZamboniRankedShootoutGameData(ZamboniUser host)
+    {
+        var replicatedGameData = CreateZamboniRankedGameData(host);
+        replicatedGameData.mGameAttribs = new SortedDictionary<string, string>
+        {
+            {
+                "ShootoutSkillMatchup", "0"
+            },
+            {
+                "ShootoutShotsPerRound", "5"
+            },
+            {
+                "ShootoutRules", "1"
+            },
+            {
+                "ShootoutGoalieControl", "1"
+            },
+            {
+                "OSDK_sponsoredEventId", "0"
+            },
+            {
+                "OSDK_roomId", "0"
+            },
+            {
+                "OSDK_matchupHash", "0"
+            },
+            {
+                "OSDK_gameMode", "2"
+            }
+        };
+        return replicatedGameData;
+    }
+
     public override string ToString()
     {
         return "Players: " + 
