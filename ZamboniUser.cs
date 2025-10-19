@@ -32,9 +32,7 @@ public class ZamboniUser
     {
         return new ReplicatedGamePlayer
         {
-            mCustomData = new byte[]
-            {
-            },
+            mCustomData = ExternalBlob,
             mExternalId = UserId,
             mGameId = gameId,
             mAccountLocale = 1701729619,
