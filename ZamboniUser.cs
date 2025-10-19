@@ -23,9 +23,7 @@ public class ZamboniUser
     public BlazeServerConnection BlazeServerConnection { get; }
     public ulong UserId { get; }
     public string Username { get; }
-
     public byte[] ExternalBlob { get; }
-
     public ulong MessengerId { get; }
 
     public ReplicatedGamePlayer ToReplicatedGamePlayer(byte slot, uint gameId)
