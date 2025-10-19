@@ -21,6 +21,7 @@ public class GameManagerComponent : GameManagerBase.Server
             Manager.QueuedMatchZamboniUsers.Remove(hockeyUserB);
             SendToRankedMatchGame(hockeyUserA, hockeyUserB, false);
         }
+
         if (Manager.QueuedShootoutZamboniUsers.Count >= 2)
         {
             var hockeyUserA = Manager.QueuedShootoutZamboniUsers[0];

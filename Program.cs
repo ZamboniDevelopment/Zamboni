@@ -141,9 +141,9 @@ internal class Program
                     Logger.Info("Redirector port: 42100");
                     Logger.Info("Online Users: " + Manager.ZamboniUsers.Count);
                     foreach (var user in Manager.ZamboniUsers) Logger.Info(user.Username);
-                    Logger.Info("Queued Total Users: " + (Manager.QueuedMatchZamboniUsers.Count+Manager.QueuedShootoutZamboniUsers.Count));
-                    foreach (var qum in Manager.QueuedMatchZamboniUsers) Logger.Info(qum.Username+" (Ranked Match Queue)");
-                    foreach (var qus in Manager.QueuedShootoutZamboniUsers) Logger.Info(qus.Username+" (Ranked Shootout Queue)");
+                    Logger.Info("Queued Total Users: " + (Manager.QueuedMatchZamboniUsers.Count + Manager.QueuedShootoutZamboniUsers.Count));
+                    foreach (var qum in Manager.QueuedMatchZamboniUsers) Logger.Info(qum.Username + " (Ranked Match Queue)");
+                    foreach (var qus in Manager.QueuedShootoutZamboniUsers) Logger.Info(qus.Username + " (Ranked Shootout Queue)");
                     Logger.Info("Zamboni Games: " + Manager.ZamboniGames.Count);
                     foreach (var zg in Manager.ZamboniGames) Logger.Info(zg);
                     break;

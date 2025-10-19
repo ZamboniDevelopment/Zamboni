@@ -3,7 +3,6 @@ using System.Linq;
 using Blaze2SDK.Blaze;
 using Blaze2SDK.Blaze.GameManager;
 using Blaze2SDK.Components;
-using NLog;
 
 namespace Zamboni;
 
@@ -110,7 +109,6 @@ public class ZamboniGame
             mPlayerRemovedReason = PlayerRemovedReason.PLAYER_LEFT
         });
         if (ZamboniUsers.Count == 1)
-        {
             NotifyParticipants(new NotifyPlayerRemoved
             {
                 mPlayerRemovedTitleContext = 0, //??
@@ -118,7 +116,6 @@ public class ZamboniGame
                 mPlayerId = (uint)ZamboniUsers[0].UserId,
                 mPlayerRemovedReason = PlayerRemovedReason.GAME_DESTROYED
             });
-        }
 
         Manager.ZamboniGames.Remove(this);
     }
