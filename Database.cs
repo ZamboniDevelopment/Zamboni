@@ -167,36 +167,49 @@ public class Database
         conn.Open();
 
         const string insertGameQuery = @"
-        INSERT INTO games (
-            game_id, fnsh, gtyp, venue, ""time"", sku, skil, shootout, pnum, plen, ot
-        ) VALUES (
-            @game_id, @fnsh, @gtyp, @venue, @time, @sku, @skil, @shootout, @pnum, @plen, @ot
-        )
-        ON CONFLICT (game_id) DO NOTHING;";
+            INSERT INTO games (
+                game_id, fnsh, gtyp
+            ) VALUES (
+                @game_id, @fnsh, @gtyp
+            )
+            ON CONFLICT (game_id) DO NOTHING;";
 
         using var cmd = new NpgsqlCommand(insertGameQuery, conn);
         cmd.Parameters.AddWithValue("game_id", (long)report.mGameReportingId);
         cmd.Parameters.AddWithValue("fnsh", report.mFinished);
         cmd.Parameters.AddWithValue("gtyp", (long)report.mGameTypeId);
+        cmd.ExecuteNonQuery();
 
         var gameAttributeMap = report.mAttributeMap;
         foreach (var key in gameAttributeMap.Keys)
+        {
+            var column = key.ToLower();
+            var insertGameAttributeQuery = $@"
+                INSERT INTO games (game_id, {column})
+                    VALUES (@game_id, @value)
+                ON CONFLICT (game_id) DO UPDATE
+                    SET {column} = EXCLUDED.{column};";
+
+            using var cmd1 = new NpgsqlCommand(insertGameAttributeQuery, conn);
+            cmd1.Parameters.AddWithValue("game_id", (long)report.mGameReportingId);
+
             if (int.TryParse(gameAttributeMap[key], out var intValue))
-                cmd.Parameters.AddWithValue(key.ToLower(), intValue);
+                cmd1.Parameters.AddWithValue("value", intValue);
             else
-                cmd.Parameters.AddWithValue(key.ToLower(), gameAttributeMap[key]);
-        cmd.ExecuteNonQuery();
+                cmd1.Parameters.AddWithValue("value", gameAttributeMap[key]);
+            cmd1.ExecuteNonQuery();
+        }
 
         var mPlayerReportMap = report.mPlayerReportMap;
         foreach (var userId in mPlayerReportMap.Keys)
         {
             const string insertPlayerQuery = @"
-            INSERT INTO reports (
-                game_id, user_id
-            ) VALUES (
-                @game_id, @user_id
-            )
-            ON CONFLICT (game_id, user_id) DO NOTHING;";
+                INSERT INTO reports (
+                    game_id, user_id
+                ) VALUES (
+                    @game_id, @user_id
+                )
+                ON CONFLICT (game_id, user_id) DO NOTHING;";
 
             using var cmd1 = new NpgsqlCommand(insertPlayerQuery, conn);
             cmd1.Parameters.AddWithValue("game_id", (long)report.mGameReportingId);
@@ -210,21 +223,21 @@ public class Database
             foreach (var key in playerAttributeMap.Keys)
             {
                 var column = key.ToLower();
-                var insertAttributeQuery = $@"
-                INSERT INTO reports (game_id, user_id, {column})
-                    VALUES (@game_id, @user_id, @value)
-                ON CONFLICT (game_id, user_id) DO UPDATE
-                    SET {column} = EXCLUDED.{column};";
+                var insertPlayerAttributeQuery = $@"
+                    INSERT INTO reports (game_id, user_id, {column})
+                        VALUES (@game_id, @user_id, @value)
+                    ON CONFLICT (game_id, user_id) DO UPDATE
+                        SET {column} = EXCLUDED.{column};";
 
-                using var cmd2 = new NpgsqlCommand(insertAttributeQuery, conn);
-                cmd2.Parameters.AddWithValue("game_id", (long)report.mGameReportingId);
-                cmd2.Parameters.AddWithValue("user_id", (long)userId);
+                using var cmd1 = new NpgsqlCommand(insertPlayerAttributeQuery, conn);
+                cmd1.Parameters.AddWithValue("game_id", (long)report.mGameReportingId);
+                cmd1.Parameters.AddWithValue("user_id", (long)userId);
 
                 if (int.TryParse(playerAttributeMap[key], out var intValue))
-                    cmd2.Parameters.AddWithValue("value", intValue);
+                    cmd1.Parameters.AddWithValue("value", intValue);
                 else
-                    cmd2.Parameters.AddWithValue("value", playerAttributeMap[key]);
-                cmd2.ExecuteNonQuery();
+                    cmd1.Parameters.AddWithValue("value", playerAttributeMap[key]);
+                cmd1.ExecuteNonQuery();
             }
         }
     }
