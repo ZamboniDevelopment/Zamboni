@@ -76,7 +76,58 @@ public class ZamboniGame
     public ReplicatedGameData ReplicatedGameData { get; set; }
     public List<ReplicatedGamePlayer> ReplicatedGamePlayers { get; set; } = new();
 
-    private ReplicatedGameData CreateZamboniRankedGameData(ZamboniUser host, ZamboniUser notHost)
+    public void AddGameParticipant(ZamboniUser user)
+    {
+        //TODO Lobby capacities?
+        ZamboniUsers.Add(user);
+        var replicatedGamePlayer = user.ToReplicatedGamePlayer((byte)(ZamboniUsers.Count - 1), GameId);
+        ReplicatedGamePlayers.Add(replicatedGamePlayer);
+
+        GameManagerBase.Server.NotifyJoinGameAsync(user.BlazeServerConnection, new NotifyJoinGame
+        {
+            mJoinErr = 0,
+            mGameData = ReplicatedGameData,
+            mMatchmakingSessionId = 0,
+            mGameRoster = ReplicatedGamePlayers
+        });
+        NotifyParticipants(new NotifyPlayerJoining
+        {
+            mGameId = GameId,
+            mJoiningPlayer = replicatedGamePlayer
+        });
+    }
+
+    public void RemoveGameParticipant(ZamboniUser user)
+    {
+        ZamboniUsers.Remove(user);
+        ReplicatedGamePlayers.Remove(ReplicatedGamePlayers.Find(player => player.mPlayerId.Equals((uint)user.UserId)));
+        NotifyParticipants(new NotifyPlayerRemoved
+        {
+            mPlayerRemovedTitleContext = 0, //??
+            mGameId = GameId,
+            mPlayerId = (uint)user.UserId,
+            mPlayerRemovedReason = PlayerRemovedReason.PLAYER_LEFT
+        });
+        if (ZamboniUsers.Count != 1) return;
+        NotifyParticipants(new NotifyPlayerRemoved
+        {
+            mPlayerRemovedTitleContext = 0, //??
+            mGameId = GameId,
+            mPlayerId = (uint)ZamboniUsers[0].UserId,
+            mPlayerRemovedReason = PlayerRemovedReason.GAME_DESTROYED
+        });
+        Manager.ZamboniGames.Remove(this);
+    }
+
+    public void NotifyParticipants(NotifyGamePlayerStateChange playerStateChange)
+    {
+        foreach (var zamboniUser in ZamboniUsers) GameManagerBase.Server.NotifyGamePlayerStateChangeAsync(zamboniUser.BlazeServerConnection, playerStateChange);
+    }
+
+    public void NotifyParticipants(NotifyPlayerJoinCompleted playerJoinCompleted)
+    {
+        foreach (var zamboniUser in ZamboniUsers) GameManagerBase.Server.NotifyPlayerJoinCompletedAsync(zamboniUser.BlazeServerConnection, playerJoinCompleted);
+    }
 
     public void NotifyParticipants(NotifyPlayerRemoved playerRemoved)
     {
