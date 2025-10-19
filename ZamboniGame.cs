@@ -1,27 +1,28 @@
 using System.Collections.Generic;
+using System.Linq;
 using Blaze2SDK.Blaze;
 using Blaze2SDK.Blaze.GameManager;
+using Blaze2SDK.Components;
+using NLog;
 
 namespace Zamboni;
 
 public class ZamboniGame
 {
-    public ZamboniGame(ZamboniUser host, ZamboniUser notHost)
+    public ZamboniGame(ZamboniUser host, ZamboniUser notHost, bool shootout)
     {
         GameId = Program.Database.GetNextGameId();
         ZamboniUsers.Add(host);
         ZamboniUsers.Add(notHost);
         ReplicatedGamePlayers.Add(host.ToReplicatedGamePlayer(0, GameId));
         ReplicatedGamePlayers.Add(notHost.ToReplicatedGamePlayer(1, GameId));
-        ReplicatedGameData = CreateZamboniRankedGameData(host, notHost);
+        ReplicatedGameData = !shootout ? CreateZamboniRankedGameData(host) : CreateZamboniRankedShootoutGameData(host);
         Manager.ZamboniGames.Add(this);
     }
 
     public ZamboniGame(ZamboniUser host, CreateGameRequest createGameRequest)
     {
         GameId = Program.Database.GetNextGameId();
-        ZamboniUsers.Add(host);
-        ReplicatedGamePlayers.Add(host.ToReplicatedGamePlayer(0, GameId));
         ReplicatedGameData = new ReplicatedGameData
         {
             mAdminPlayerList = new List<uint>
