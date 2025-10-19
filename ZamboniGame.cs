@@ -78,6 +78,17 @@ public class ZamboniGame
 
     private ReplicatedGameData CreateZamboniRankedGameData(ZamboniUser host, ZamboniUser notHost)
 
+    public void NotifyParticipants(NotifyPlayerRemoved playerRemoved)
+    {
+        foreach (var zamboniUser in ZamboniUsers) GameManagerBase.Server.NotifyPlayerRemovedAsync(zamboniUser.BlazeServerConnection, playerRemoved);
+    }
+
+    private void NotifyParticipants(NotifyPlayerJoining playerJoining)
+    {
+        foreach (var zamboniUser in ZamboniUsers) GameManagerBase.Server.NotifyPlayerJoiningAsync(zamboniUser.BlazeServerConnection, playerJoining);
+    }
+
+    private ReplicatedGameData CreateZamboniRankedGameData(ZamboniUser host)
     {
         return new ReplicatedGameData
         {
