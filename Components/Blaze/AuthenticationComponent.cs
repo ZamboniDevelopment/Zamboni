@@ -103,7 +103,8 @@ public class AuthenticationComponent : AuthenticationComponentBase.Server
     {
         var leaver = Manager.GetZamboniUser(context.BlazeConnection);
         if (leaver != null) Manager.ZamboniUsers.Remove(leaver);
-        if (leaver != null) Manager.QueuedZamboniUsers.Remove(leaver);
+        if (leaver != null) Manager.QueuedMatchZamboniUsers.Remove(leaver);
+        if (leaver != null) Manager.QueuedShootoutZamboniUsers.Remove(leaver);
         return Task.FromResult(new NullStruct());
     }
 
