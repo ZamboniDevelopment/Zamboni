@@ -7,7 +7,8 @@ namespace Zamboni;
 public static class Manager
 {
     public static readonly List<ZamboniUser> ZamboniUsers = new();
-    public static readonly List<ZamboniUser> QueuedZamboniUsers = new();
+    public static readonly List<ZamboniUser> QueuedMatchZamboniUsers = new();
+    public static readonly List<ZamboniUser> QueuedShootoutZamboniUsers = new();
 
     public static readonly List<ZamboniGame> ZamboniGames = new();
 
