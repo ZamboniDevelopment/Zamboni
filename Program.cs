@@ -22,11 +22,12 @@ namespace Zamboni;
 // tcp.port == 17499 || udp.port == 17499 || tcp.port == 3659 || udp.port == 3659  || tcp.port == 17500 || udp.port == 17500 || tcp.port == 17501 || udp.port == 17501 || tcp.port == 17502 || udp.port == 17502 || tcp.port == 17503 || udp.port == 17503
 internal class Program
 {
-    public const string Version = "1.0";
+    public const string Version = "1.1";
 
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     public static ZamboniConfig ZamboniConfig;
+    public static Database Database;
 
     public static readonly string PublicIp = new HttpClient().GetStringAsync("https://checkip.amazonaws.com/").GetAwaiter().GetResult().Trim();
 
@@ -34,6 +35,7 @@ internal class Program
     {
         InitConfig();
         StartLogger();
+        InitDatabase();
 
         var commandTask = Task.Run(StartCommandListener);
         var redirectorTask = StartRedirectorServer();
@@ -70,7 +72,8 @@ internal class Program
 
             const string comments = "# GameServerIp: 'auto' = automatically detect public IP or specify a manual IP address, where GameServer is run on\n" +
                                     "# GameServerPort: Port for GameServer to listen on. (Redirector server lives on 42100, clients request there)\n" +
-                                    "# LogLevel: Valid values: Trace, Debug, Info, Warn, Error, Fatal, Off.\n\n";
+                                    "# LogLevel: Valid values: Trace, Debug, Info, Warn, Error, Fatal, Off.\n" +
+                                    "# DatabaseConnectionString: Connection string to PostgreSQL, for saving data. (Not required)\n\n";
             File.WriteAllText(configFile, comments + yaml);
             Logger.Warn("Config file created: " + configFile);
             return;
@@ -78,6 +81,11 @@ internal class Program
 
         var yamlText = File.ReadAllText(configFile);
         ZamboniConfig = deserializer.Deserialize<ZamboniConfig>(yamlText);
+    }
+
+    private static void InitDatabase()
+    {
+        Database = new Database();
     }
 
     private static async Task StartRedirectorServer()

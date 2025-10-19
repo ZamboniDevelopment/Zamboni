@@ -6,11 +6,9 @@ namespace Zamboni;
 
 public class ZamboniGame
 {
-    private static uint _gameIdCounter = 1;
-
     public ZamboniGame(ZamboniUser host, ZamboniUser notHost)
     {
-        GameId = _gameIdCounter++;
+        GameId = Program.Database.GetNextGameId();
         ZamboniUsers.Add(host);
         ZamboniUsers.Add(notHost);
         ReplicatedGamePlayers.Add(host.ToReplicatedGamePlayer(0, GameId));
@@ -21,7 +19,7 @@ public class ZamboniGame
 
     public ZamboniGame(ZamboniUser host, CreateGameRequest createGameRequest)
     {
-        GameId = _gameIdCounter++;
+        GameId = Program.Database.GetNextGameId();
         ZamboniUsers.Add(host);
         ReplicatedGamePlayers.Add(host.ToReplicatedGamePlayer(0, GameId));
         ReplicatedGameData = new ReplicatedGameData

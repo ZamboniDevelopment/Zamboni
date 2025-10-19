@@ -9,7 +9,7 @@ internal class GameReportingComponent : GameReportingComponentBase.Server
 {
     public override Task<NullStruct> SubmitGameReportAsync(GameReport request, BlazeRpcContext context)
     {
-        //TODO Save precious historical game data
+        if (Program.Database.isEnabled) Program.Database.InsertReport(request);
         return Task.FromResult(new NullStruct());
     }
 }
