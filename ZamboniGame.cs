@@ -109,14 +109,17 @@ public class ZamboniGame
             mPlayerId = (uint)user.UserId,
             mPlayerRemovedReason = PlayerRemovedReason.PLAYER_LEFT
         });
-        if (ZamboniUsers.Count != 1) return;
-        NotifyParticipants(new NotifyPlayerRemoved
+        if (ZamboniUsers.Count == 1)
         {
-            mPlayerRemovedTitleContext = 0, //??
-            mGameId = GameId,
-            mPlayerId = (uint)ZamboniUsers[0].UserId,
-            mPlayerRemovedReason = PlayerRemovedReason.GAME_DESTROYED
-        });
+            NotifyParticipants(new NotifyPlayerRemoved
+            {
+                mPlayerRemovedTitleContext = 0, //??
+                mGameId = GameId,
+                mPlayerId = (uint)ZamboniUsers[0].UserId,
+                mPlayerRemovedReason = PlayerRemovedReason.GAME_DESTROYED
+            });
+        }
+
         Manager.ZamboniGames.Remove(this);
     }
 
@@ -260,9 +263,10 @@ public class ZamboniGame
 
     public override string ToString()
     {
-        return "Players: " + 
-               string.Join(", ", ZamboniUsers.Select(zamboniUser => zamboniUser.Username)) + 
-               " gameId:" + GameId + 
-               " state: " + ReplicatedGameData.mGameState + 
-               " type (1 ranked game 2 shootout): " + ReplicatedGameData.mGameAttribs["OSDK_gameMode"];    }
+        return "Players: " +
+               string.Join(", ", ZamboniUsers.Select(zamboniUser => zamboniUser.Username)) +
+               " gameId:" + GameId +
+               " state: " + ReplicatedGameData.mGameState +
+               " type (1 ranked game 2 shootout): " + ReplicatedGameData.mGameAttribs["OSDK_gameMode"];
+    }
 }
