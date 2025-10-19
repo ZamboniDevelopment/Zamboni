@@ -120,7 +120,7 @@ public class ZamboniGame
             },
             mSlotCapacities = new List<ushort>
             {
-                2, 2, 2, 2
+                0, 2
             }, //TODO
             mEntryCriteriaMap = new SortedDictionary<string, string>(),
             mGameId = GameId,
