@@ -22,7 +22,7 @@ namespace Zamboni;
 // tcp.port == 17499 || udp.port == 17499 || tcp.port == 3659 || udp.port == 3659  || tcp.port == 17500 || udp.port == 17500 || tcp.port == 17501 || udp.port == 17501 || tcp.port == 17502 || udp.port == 17502 || tcp.port == 17503 || udp.port == 17503
 internal class Program
 {
-    public const string Version = "1.2";
+    public const string Version = "1.3";
 
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -40,18 +40,20 @@ internal class Program
         var commandTask = Task.Run(StartCommandListener);
         var redirectorTask = StartRedirectorServer();
         var coreTask = StartCoreServer();
+        var apiTask = new RestApi().StartAsync();
         Logger.Warn("Zamboni server " + Version + " started");
-        await Task.WhenAll(redirectorTask, coreTask, commandTask);
+        await Task.WhenAll(redirectorTask, coreTask, commandTask, apiTask);
     }
 
     private static void StartLogger()
     {
         var logLevel = LogLevel.FromString(ZamboniConfig.LogLevel);
+        var layout = new SimpleLayout("[${longdate}][${callsite-filename:includeSourcePath=false}(${callsite-linenumber})][${level:uppercase=true}]: ${message:withexception=true}");
         LogManager.Setup().LoadConfiguration(builder =>
         {
             builder.ForLogger().FilterMinLevel(logLevel)
-                .WriteToConsole(new SimpleLayout(
-                    "[${longdate}][${callsite-filename:includeSourcePath=false}(${callsite-linenumber})][${level:uppercase=true}]: ${message:withexception=true}"));
+                .WriteToConsole(layout)
+                .WriteToFile("logs/server-${shortdate}.log", layout);
         });
     }
 
