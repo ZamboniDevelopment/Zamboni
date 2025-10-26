@@ -15,8 +15,8 @@ internal class RedirectorComponent : RedirectorComponentBase.Server
             {
                 IpAddress = new IpAddress
                 {
-                    mHostname = Program.PublicIp,
-                    mIp = Util.GetIPAddressAsUInt(Program.PublicIp),
+                    mHostname = Program.GameServerIp,
+                    mIp = Util.GetIPAddressAsUInt(Program.GameServerIp),
                     mPort = Program.ZamboniConfig.GameServerPort
                 }
             },

@@ -23,11 +23,10 @@ public class Database
             isEnabled = true;
             Logger.Warn("Database is accessible.");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             isEnabled = false;
             Logger.Warn("Database is not accessible. Gamedata wont be saved");
-            Logger.Warn(ex.Message);
             return;
         }
 

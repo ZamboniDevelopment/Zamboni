@@ -29,13 +29,15 @@ internal class Program
     public static ZamboniConfig ZamboniConfig;
     public static Database Database;
 
-    public static readonly string PublicIp = new HttpClient().GetStringAsync("https://checkip.amazonaws.com/").GetAwaiter().GetResult().Trim();
+    private static readonly string PublicIp = new HttpClient().GetStringAsync("https://checkip.amazonaws.com/").GetAwaiter().GetResult().Trim();
+    public static string GameServerIp;
 
     private static async Task Main(string[] args)
     {
         InitConfig();
         StartLogger();
         InitDatabase();
+        GameServerIp = ZamboniConfig.GameServerIp.Equals("auto") ? PublicIp : ZamboniConfig.GameServerIp;
 
         var commandTask = Task.Run(StartCommandListener);
         var redirectorTask = StartRedirectorServer();
@@ -138,7 +140,7 @@ internal class Program
 
                 case "status":
                     Logger.Info("Zamboni " + Version);
-                    Logger.Info("Server running on ip: " + ZamboniConfig.GameServerIp + " (" + PublicIp + ")");
+                    Logger.Info("Server running on ip: " + GameServerIp + " (" + PublicIp + ")");
                     Logger.Info("GameServerPort port: " + ZamboniConfig.GameServerPort);
                     Logger.Info("Redirector port: 42100");
                     Logger.Info("Online Users: " + Manager.ZamboniUsers.Count);
