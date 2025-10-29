@@ -11,30 +11,30 @@ public class UserSessionsComponent : UserSessionsBase.Server
     public override Task<NullStruct> UpdateNetworkInfoAsync(NetworkInfo request, BlazeRpcContext context)
     {
         var zamboniUser = Manager.GetZamboniUser(context.BlazeConnection);
+        if (zamboniUser == null) return Task.FromResult(new NullStruct());
         zamboniUser.NetworkInfo = request;
 
-        foreach (var onlineUser in Manager.ZamboniUsers)
-            NotifyUserSessionExtendedDataUpdateAsync(onlineUser.BlazeServerConnection,
-                new UserSessionExtendedDataUpdate
+        NotifyUserSessionExtendedDataUpdateAsync(zamboniUser.BlazeServerConnection,
+            new UserSessionExtendedDataUpdate
+            {
+                mExtendedData = new UserSessionExtendedData
                 {
-                    mExtendedData = new UserSessionExtendedData
+                    mAddress = request.mAddress,
+                    mBestPingSiteAlias = "qos",
+                    mClientAttributes = new SortedDictionary<uint, int>(),
+                    mCountry = "",
+                    mDataMap = new SortedDictionary<uint, int>(),
+                    mHardwareFlags = HardwareFlags.None,
+                    mLatencyList = new List<int>
                     {
-                        mAddress = request.mAddress,
-                        mBestPingSiteAlias = "qos",
-                        mClientAttributes = new SortedDictionary<uint, int>(),
-                        mCountry = "",
-                        mDataMap = new SortedDictionary<uint, int>(),
-                        mHardwareFlags = HardwareFlags.None,
-                        mLatencyList = new List<int>
-                        {
-                            10
-                        },
-                        mQosData = request.mQosData,
-                        mUserInfoAttribute = 0,
-                        mBlazeObjectIdList = new List<ulong>()
+                        10
                     },
-                    mUserId = (uint)zamboniUser.UserId
-                });
+                    mQosData = request.mQosData,
+                    mUserInfoAttribute = 0,
+                    mBlazeObjectIdList = new List<ulong>()
+                },
+                mUserId = (uint)zamboniUser.UserId
+            });
 
         return Task.FromResult(new NullStruct());
     }

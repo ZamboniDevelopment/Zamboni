@@ -24,7 +24,7 @@ public class RestApi
             serverVersion = Program.Version,
             onlineUsersCount = Manager.ZamboniUsers.Count,
             onlineUsers = string.Join(", ", Manager.ZamboniUsers.Select(zamboniUser => zamboniUser.Username)),
-            queuedUsers = Manager.QueuedMatchZamboniUsers.Count + Manager.QueuedShootoutZamboniUsers.Count,
+            queuedUsers = Manager.QueuedUsers.Count,
             activeGames = Manager.ZamboniGames.Count
         }));
 

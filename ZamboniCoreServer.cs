@@ -14,13 +14,12 @@ public class ZamboniCoreServer : BlazeServer
         var zamboniUser = Manager.GetZamboniUser(connection);
         if (zamboniUser == null) return base.OnProtoFireDisconnectAsync(connection);
         Manager.ZamboniUsers.Remove(zamboniUser);
-        Manager.QueuedMatchZamboniUsers.Remove(zamboniUser);
-        Manager.QueuedShootoutZamboniUsers.Remove(zamboniUser);
+
+        var queuedUser = Manager.GetQueuedUser(zamboniUser);
+        if (queuedUser != null) Manager.QueuedUsers.Remove(queuedUser);
 
         var zamboniGame = Manager.GetZamboniGame(zamboniUser);
-        if (zamboniGame == null) return base.OnProtoFireDisconnectAsync(connection);
-
-        zamboniGame.RemoveGameParticipant(zamboniUser);
+        if (zamboniGame != null) zamboniGame.RemoveGameParticipant(zamboniUser);
 
         return base.OnProtoFireDisconnectAsync(connection);
     }

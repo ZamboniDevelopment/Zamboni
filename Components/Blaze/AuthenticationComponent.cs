@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Blaze2SDK.Blaze;
@@ -33,7 +32,6 @@ public class AuthenticationComponent : AuthenticationComponentBase.Server
         externalBlob.AddRange(new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
 
         Logger.Warn(ticket.OnlineId + " connected");
-        foreach (var zamboniUser in Manager.ZamboniUsers.ToList().Where(zamboniUser => zamboniUser.Username.Equals(ticket.OnlineId))) Manager.ZamboniUsers.Remove(zamboniUser);
         var user = new ZamboniUser(context.BlazeConnection, ticket.UserId, ticket.OnlineId, externalBlob.ToArray());
 
         Task.Run(async () =>
@@ -101,10 +99,6 @@ public class AuthenticationComponent : AuthenticationComponentBase.Server
 
     public override Task<NullStruct> LogoutAsync(NullStruct request, BlazeRpcContext context)
     {
-        var leaver = Manager.GetZamboniUser(context.BlazeConnection);
-        if (leaver != null) Manager.ZamboniUsers.Remove(leaver);
-        if (leaver != null) Manager.QueuedMatchZamboniUsers.Remove(leaver);
-        if (leaver != null) Manager.QueuedShootoutZamboniUsers.Remove(leaver);
         return Task.FromResult(new NullStruct());
     }
 

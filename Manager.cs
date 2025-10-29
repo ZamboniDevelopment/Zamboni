@@ -6,11 +6,11 @@ namespace Zamboni;
 
 public static class Manager
 {
-    public static readonly List<ZamboniUser> ZamboniUsers = new();
-    public static readonly List<ZamboniUser> QueuedMatchZamboniUsers = new();
-    public static readonly List<ZamboniUser> QueuedShootoutZamboniUsers = new();
+    public static readonly HashSet<ZamboniUser> ZamboniUsers = new();
 
-    public static readonly List<ZamboniGame> ZamboniGames = new();
+    public static readonly HashSet<QueuedUser> QueuedUsers = new();
+
+    public static readonly HashSet<ZamboniGame> ZamboniGames = new();
 
     public static ZamboniUser GetZamboniUser(BlazeServerConnection blazeServerConnection)
     {
@@ -45,5 +45,10 @@ public static class Manager
     public static ZamboniGame GetZamboniGame(ZamboniUser zamboniUser)
     {
         return ZamboniGames.FirstOrDefault(loopGame => loopGame.ZamboniUsers.Contains(zamboniUser));
+    }
+
+    public static QueuedUser GetQueuedUser(ZamboniUser zamboniUser)
+    {
+        return QueuedUsers.FirstOrDefault(loopUser => loopUser.ZamboniUser.Equals(zamboniUser));
     }
 }

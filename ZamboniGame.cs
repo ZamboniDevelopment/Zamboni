@@ -8,17 +8,6 @@ namespace Zamboni;
 
 public class ZamboniGame
 {
-    public ZamboniGame(ZamboniUser host, ZamboniUser notHost, bool shootout)
-    {
-        GameId = Program.Database.GetNextGameId();
-        ZamboniUsers.Add(host);
-        ZamboniUsers.Add(notHost);
-        ReplicatedGamePlayers.Add(host.ToReplicatedGamePlayer(0, GameId));
-        ReplicatedGamePlayers.Add(notHost.ToReplicatedGamePlayer(1, GameId));
-        ReplicatedGameData = !shootout ? CreateZamboniRankedGameData(host) : CreateZamboniRankedShootoutGameData(host);
-        Manager.ZamboniGames.Add(this);
-    }
-
     public ZamboniGame(ZamboniUser host, CreateGameRequest createGameRequest)
     {
         GameId = Program.Database.GetNextGameId();
@@ -36,7 +25,7 @@ public class ZamboniGame
             mGameSettings = createGameRequest.mGameSettings,
             mGameReportingId = GameId,
             mGameState = GameState.INITIALIZING,
-            mGameProtocolVersion = createGameRequest.mGameProtocolVersion,
+            mGameProtocolVersion = 1,
             mHostNetworkAddress = createGameRequest.mHostNetworkAddress,
             mTopologyHostSessionId = (uint)host.UserId,
             mIgnoreEntryCriteriaWithInvite = true,
@@ -69,6 +58,72 @@ public class ZamboniGame
         Manager.ZamboniGames.Add(this);
     }
 
+    public ZamboniGame(ZamboniUser host, StartMatchmakingRequest startMatchmakingRequest, string gameMode)
+    {
+        GameId = Program.Database.GetNextGameId();
+        SortedDictionary<string, string> mGameAttribs;
+        switch (gameMode)
+        {
+            case "1":
+                mGameAttribs = VsGameAttribs();
+                break;
+            case "2":
+                mGameAttribs = SoGameAttribs();
+                break;
+            case "3":
+                mGameAttribs = OtpGameAttribs();
+                break;
+            default:
+                return;
+        }
+
+        ReplicatedGameData = new ReplicatedGameData
+        {
+            mAdminPlayerList = new List<uint>
+            {
+                (uint)host.UserId
+            },
+            mGameAttribs = mGameAttribs,
+            mSlotCapacities = Capacities(gameMode),
+            // mEntryCriteriaMap = startMatchmakingRequest.mEntryCriteriaMap,
+            mGameId = GameId,
+            mGameName = "game" + GameId,
+            mGameSettings = startMatchmakingRequest.mGameSettings,
+            mGameReportingId = GameId,
+            mGameState = GameState.INITIALIZING,
+            mGameProtocolVersion = 1,
+            mHostNetworkAddress = host.NetworkInfo.mAddress,
+            mTopologyHostSessionId = (uint)host.UserId,
+            mIgnoreEntryCriteriaWithInvite = true,
+            mMeshAttribs = new SortedDictionary<string, string>(),
+            mMaxPlayerCapacity = 2, //TODO Parse from gamemode
+            mNetworkQosData = host.NetworkInfo.mQosData,
+            mNetworkTopology = GameNetworkTopology.CLIENT_SERVER_PEER_HOSTED,
+            mPlatformHostInfo = new HostInfo
+            {
+                mPlayerId = (uint)host.UserId,
+                mSlotId = 0
+            },
+            mPingSiteAlias = "qos",
+            mQueueCapacity = 0,
+            mTopologyHostInfo = new HostInfo
+            {
+                mPlayerId = (uint)host.UserId,
+                mSlotId = 0
+            },
+            mUUID = "game" + GameId,
+            mVoipNetwork = VoipTopology.VOIP_DISABLED,
+            mGameProtocolVersionString = startMatchmakingRequest.mGameProtocolVersionString,
+            mXnetNonce = new byte[]
+            {
+            },
+            mXnetSession = new byte[]
+            {
+            }
+        };
+        Manager.ZamboniGames.Add(this);
+    }
+
     public uint GameId { get; }
 
     public List<ZamboniUser> ZamboniUsers { get; } = new();
@@ -76,7 +131,21 @@ public class ZamboniGame
     public ReplicatedGameData ReplicatedGameData { get; set; }
     public List<ReplicatedGamePlayer> ReplicatedGamePlayers { get; set; } = new();
 
-    public void AddGameParticipant(ZamboniUser user)
+    private List<ushort> Capacities(string gameMode)
+    {
+        if (gameMode.Equals("3"))
+            return new List<ushort>
+            {
+                0, 12
+            };
+
+        return new List<ushort>
+        {
+            0, 2
+        };
+    }
+
+    public void AddGameParticipant(ZamboniUser user, uint matchmakingSessionId = 0)
     {
         //TODO Lobby capacities?
         ZamboniUsers.Add(user);
@@ -87,7 +156,7 @@ public class ZamboniGame
         {
             mJoinErr = 0,
             mGameData = ReplicatedGameData,
-            mMatchmakingSessionId = 0,
+            mMatchmakingSessionId = matchmakingSessionId,
             mGameRoster = ReplicatedGamePlayers
         });
         NotifyParticipants(new NotifyPlayerJoining
@@ -140,95 +209,56 @@ public class ZamboniGame
         foreach (var zamboniUser in ZamboniUsers) GameManagerBase.Server.NotifyPlayerJoiningAsync(zamboniUser.BlazeServerConnection, playerJoining);
     }
 
-    private ReplicatedGameData CreateZamboniRankedGameData(ZamboniUser host)
+    private SortedDictionary<string, string> VsGameAttribs()
     {
-        return new ReplicatedGameData
+        return new SortedDictionary<string, string>
         {
-            mAdminPlayerList = new List<uint>
             {
-                (uint)host.UserId
+                "Rules", "1"
             },
-            mGameAttribs = new SortedDictionary<string, string>
             {
-                {
-                    "Rules", "1"
-                },
-                {
-                    "PeriodLength", "5"
-                },
-                {
-                    "Penalties", "1"
-                },
-                {
-                    "OSDK_sponsoredEventId", "0"
-                },
-                {
-                    "OSDK_roomId", "0"
-                },
-                {
-                    "OSDK_matchupHash", "0"
-                },
-                {
-                    "OSDK_gameMode", "1"
-                },
-                {
-                    "Injuries", "1"
-                },
-                {
-                    "Fighting", "1"
-                },
-                {
-                    "CreatedPlays", "1"
-                }
+                "PeriodLength", "5"
             },
-            mSlotCapacities = new List<ushort>
             {
-                0, 2
-            }, //TODO
-            mEntryCriteriaMap = new SortedDictionary<string, string>(),
-            mGameId = GameId,
-            mGameName = "game" + GameId,
-            mGameSettings = GameSettings.OpenToJoinByPlayer,
-            mGameReportingId = GameId,
-            mGameState = GameState.INITIALIZING,
-            mGameProtocolVersion = 1,
-            mHostNetworkAddress = host.NetworkInfo.mAddress,
-            mTopologyHostSessionId = (uint)host.UserId,
-            mIgnoreEntryCriteriaWithInvite = true,
-            mMeshAttribs = new SortedDictionary<string, string>(),
-            mMaxPlayerCapacity = 2,
-            mNetworkQosData = host.NetworkInfo.mQosData,
-            mNetworkTopology = GameNetworkTopology.CLIENT_SERVER_PEER_HOSTED,
-            mPlatformHostInfo = new HostInfo
-            {
-                mPlayerId = (uint)host.UserId,
-                mSlotId = 0
+                "Penalties", "1"
             },
-            mPingSiteAlias = "qos",
-            mQueueCapacity = 4,
-            mTopologyHostInfo = new HostInfo
             {
-                mPlayerId = (uint)host.UserId,
-                mSlotId = 0
+                "OSDK_sponsoredEventId", "0"
             },
-
-            mUUID = "game" + GameId,
-            mVoipNetwork = VoipTopology.VOIP_DISABLED,
-            mGameProtocolVersionString = "NHL10_1.00",
-
-            mXnetNonce = new byte[]
             {
+                "OSDK_roomId", "0"
             },
-            mXnetSession = new byte[]
             {
+                "OSDK_matchupHash", "0"
+            },
+            {
+                "OSDK_gameMode", "1"
+            },
+            {
+                "Injuries", "1"
+            },
+            {
+                "Fighting", "1"
+            },
+            {
+                "CreatedPlays", "1"
             }
         };
     }
 
-    private ReplicatedGameData CreateZamboniRankedShootoutGameData(ZamboniUser host)
+    private SortedDictionary<string, string> OtpGameAttribs()
     {
-        var replicatedGameData = CreateZamboniRankedGameData(host);
-        replicatedGameData.mGameAttribs = new SortedDictionary<string, string>
+        SortedDictionary<string, string> vsGameAttribs = new();
+        vsGameAttribs.Add("ClubRules", "0");
+        vsGameAttribs.Remove("CreatedPlays");
+        vsGameAttribs.Remove("OSDK_gameMode");
+        vsGameAttribs.Add("OSDK_gameMode", "3");
+        return vsGameAttribs;
+    }
+
+    private SortedDictionary<string, string> SoGameAttribs()
+    {
+        return new SortedDictionary<string, string>
         {
             {
                 "ShootoutSkillMatchup", "0"
@@ -255,7 +285,6 @@ public class ZamboniGame
                 "OSDK_gameMode", "2"
             }
         };
-        return replicatedGameData;
     }
 
     public override string ToString()
@@ -264,6 +293,6 @@ public class ZamboniGame
                string.Join(", ", ZamboniUsers.Select(zamboniUser => zamboniUser.Username)) +
                " gameId:" + GameId +
                " state: " + ReplicatedGameData.mGameState +
-               " type (1 ranked game 2 shootout): " + ReplicatedGameData.mGameAttribs["OSDK_gameMode"];
+               " type (1 vs game 2 shootout, 3 otp): " + ReplicatedGameData.mGameAttribs["OSDK_gameMode"];
     }
 }

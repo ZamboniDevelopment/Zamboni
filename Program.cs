@@ -22,7 +22,7 @@ namespace Zamboni;
 // tcp.port == 17499 || udp.port == 17499 || tcp.port == 3659 || udp.port == 3659  || tcp.port == 17500 || udp.port == 17500 || tcp.port == 17501 || udp.port == 17501 || tcp.port == 17502 || udp.port == 17502 || tcp.port == 17503 || udp.port == 17503
 internal class Program
 {
-    public const string Version = "1.3";
+    public const string Version = "1.3.1";
 
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -145,9 +145,8 @@ internal class Program
                     Logger.Info("Redirector port: 42100");
                     Logger.Info("Online Users: " + Manager.ZamboniUsers.Count);
                     foreach (var user in Manager.ZamboniUsers) Logger.Info(user.Username);
-                    Logger.Info("Queued Total Users: " + (Manager.QueuedMatchZamboniUsers.Count + Manager.QueuedShootoutZamboniUsers.Count));
-                    foreach (var qum in Manager.QueuedMatchZamboniUsers) Logger.Info(qum.Username + " (Ranked Match Queue)");
-                    foreach (var qus in Manager.QueuedShootoutZamboniUsers) Logger.Info(qus.Username + " (Ranked Shootout Queue)");
+                    Logger.Info("Queued Total Users: " + Manager.QueuedUsers.Count);
+                    foreach (var qU in Manager.QueuedUsers) Logger.Info(qU.ZamboniUser.Username);
                     Logger.Info("Zamboni Games: " + Manager.ZamboniGames.Count);
                     foreach (var zg in Manager.ZamboniGames) Logger.Info(zg);
                     break;

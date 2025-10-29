@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
+using System.Timers;
 using Blaze2SDK.Blaze.GameManager;
 using Blaze2SDK.Components;
 using BlazeCommon;
@@ -11,124 +12,86 @@ public class GameManagerComponent : GameManagerBase.Server
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private static void Trigger()
-    {
-        if (Manager.QueuedMatchZamboniUsers.Count >= 2)
-        {
-            var hockeyUserA = Manager.QueuedMatchZamboniUsers[0];
-            var hockeyUserB = Manager.QueuedMatchZamboniUsers[1];
-            Manager.QueuedMatchZamboniUsers.Remove(hockeyUserA);
-            Manager.QueuedMatchZamboniUsers.Remove(hockeyUserB);
-            SendToRankedMatchGame(hockeyUserA, hockeyUserB, false);
-        }
+    private static readonly Timer Timer;
 
-        if (Manager.QueuedShootoutZamboniUsers.Count >= 2)
+    static GameManagerComponent()
+    {
+        Timer = new Timer(2000);
+        Timer.Elapsed += OnTimedEvent;
+        Timer.AutoReset = true;
+        Timer.Enabled = true;
+    }
+
+    private static void OnTimedEvent(object sender, ElapsedEventArgs e)
+    {
+        if (Manager.QueuedUsers.Count <= 1) return;
+
+        var grouped = Manager.QueuedUsers.GroupBy(u => u.StartMatchmakingRequest.mCriteriaData.mGenericRulePrefsList.Find(prefs => prefs.mRuleName.Equals("OSDK_gameMode")).mDesiredValues[0]);
+
+        foreach (var group in grouped)
         {
-            var hockeyUserA = Manager.QueuedShootoutZamboniUsers[0];
-            var hockeyUserB = Manager.QueuedShootoutZamboniUsers[1];
-            Manager.QueuedShootoutZamboniUsers.Remove(hockeyUserA);
-            Manager.QueuedShootoutZamboniUsers.Remove(hockeyUserB);
-            SendToRankedMatchGame(hockeyUserA, hockeyUserB, true);
+            var users = group.ToList();
+
+            while (users.Count >= 2)
+            {
+                var queuedUserA = users[0];
+                var queuedUserB = users[1];
+
+                users.RemoveRange(0, 2);
+                Manager.QueuedUsers.Remove(queuedUserA);
+                Manager.QueuedUsers.Remove(queuedUserB);
+
+                SendToMatchMakingGame(queuedUserA, queuedUserB, queuedUserA.StartMatchmakingRequest, group.Key);
+            }
         }
     }
 
-    private static void SendToRankedMatchGame(ZamboniUser host, ZamboniUser notHost, bool shootout)
+    private static void SendToMatchMakingGame(QueuedUser host, QueuedUser notHost, StartMatchmakingRequest startMatchmakingRequest, string gameMode)
     {
-        var zamboniGame = new ZamboniGame(host, notHost, shootout);
+        var zamboniGame = new ZamboniGame(host.ZamboniUser, startMatchmakingRequest, gameMode);
 
-        NotifyGameCreatedAsync(host.BlazeServerConnection, new NotifyGameCreated
-        {
-            mGameId = zamboniGame.GameId
-        });
+        zamboniGame.AddGameParticipant(host.ZamboniUser, host.MatchmakingSessionId);
+        zamboniGame.AddGameParticipant(notHost.ZamboniUser, notHost.MatchmakingSessionId);
 
-        NotifyGameCreatedAsync(notHost.BlazeServerConnection, new NotifyGameCreated
-        {
-            mGameId = zamboniGame.GameId
-        });
-
-        NotifyMatchmakingFinishedAsync(host.BlazeServerConnection, new NotifyMatchmakingFinished
+        NotifyMatchmakingFinishedAsync(host.ZamboniUser.BlazeServerConnection, new NotifyMatchmakingFinished
         {
             mFitScore = 10,
             mGameId = zamboniGame.GameId,
             mMaxPossibleFitScore = 10,
-            mSessionId = (uint)host.UserId,
-            mMatchmakingResult = MatchmakingResult.SUCCESS_CREATED_GAME,
-            mUserSessionId = (uint)host.UserId
+            mSessionId = host.MatchmakingSessionId,
+            mMatchmakingResult = MatchmakingResult.SUCCESS_JOINED_EXISTING_GAME,
+            mUserSessionId = (uint)host.ZamboniUser.UserId
         });
-        NotifyMatchmakingFinishedAsync(notHost.BlazeServerConnection, new NotifyMatchmakingFinished
+
+        NotifyMatchmakingFinishedAsync(notHost.ZamboniUser.BlazeServerConnection, new NotifyMatchmakingFinished
         {
             mFitScore = 10,
             mGameId = zamboniGame.GameId,
             mMaxPossibleFitScore = 10,
-            mSessionId = (uint)notHost.UserId,
-            mMatchmakingResult = MatchmakingResult.SUCCESS_JOINED_NEW_GAME,
-            mUserSessionId = (uint)notHost.UserId
-        });
-
-
-        //This is not really a right solution, but works somehow for now...
-
-        Task.Run(async () =>
-        {
-            await Task.Delay(10);
-
-            await NotifyJoinGameAsync(host.BlazeServerConnection, new NotifyJoinGame
-            {
-                mJoinErr = 0,
-                mGameData = zamboniGame.ReplicatedGameData,
-                mMatchmakingSessionId = (uint)host.UserId,
-                mGameRoster = zamboniGame.ReplicatedGamePlayers
-            });
-
-            await NotifyJoinGameAsync(notHost.BlazeServerConnection, new NotifyJoinGame
-            {
-                mJoinErr = 0,
-                mGameData = zamboniGame.ReplicatedGameData,
-                mMatchmakingSessionId = (uint)notHost.UserId,
-                mGameRoster = zamboniGame.ReplicatedGamePlayers
-            });
+            mSessionId = notHost.MatchmakingSessionId,
+            mMatchmakingResult = MatchmakingResult.SUCCESS_JOINED_EXISTING_GAME,
+            mUserSessionId = (uint)notHost.ZamboniUser.UserId
         });
     }
 
     public override Task<StartMatchmakingResponse> StartMatchmakingAsync(StartMatchmakingRequest request, BlazeRpcContext context)
     {
         var zamboniUser = Manager.GetZamboniUser(context.BlazeConnection);
-        foreach (var loopUser in Manager.QueuedMatchZamboniUsers.ToList().Where(loopUser => loopUser.UserId.Equals(zamboniUser.UserId))) Manager.QueuedMatchZamboniUsers.Remove(loopUser);
-        foreach (var loopUser in Manager.QueuedShootoutZamboniUsers.ToList().Where(loopUser => loopUser.UserId.Equals(zamboniUser.UserId))) Manager.QueuedShootoutZamboniUsers.Remove(loopUser);
 
-        Logger.Info(zamboniUser.Username + " queued");
-        //Maybe we should parse all criterias...
-        var gameMode = request.mCriteriaData.mGenericRulePrefsList.Find(prefs => prefs.mRuleName.Equals("OSDK_gameMode")).mDesiredValues[0];
-        switch (gameMode)
-        {
-            case "1":
-                Manager.QueuedMatchZamboniUsers.Add(zamboniUser);
-                break;
-            case "2":
-                Manager.QueuedShootoutZamboniUsers.Add(zamboniUser);
-                break;
-            default:
-                Logger.Warn("Unknown game mode: " + gameMode);
-                break;
-        }
+        var queuedUser = new QueuedUser(zamboniUser, request);
+        Manager.QueuedUsers.Add(queuedUser);
 
-        Task.Run(async () =>
-        {
-            await Task.Delay(100);
-            Trigger();
-        });
         return Task.FromResult(new StartMatchmakingResponse
         {
-            mSessionId = (uint)zamboniUser.UserId
+            mSessionId = queuedUser.MatchmakingSessionId
         });
     }
-
 
     public override Task<NullStruct> CancelMatchmakingAsync(CancelMatchmakingRequest request, BlazeRpcContext context)
     {
         var zamboniUser = Manager.GetZamboniUser(context.BlazeConnection);
-        Manager.QueuedMatchZamboniUsers.Remove(zamboniUser);
-        Manager.QueuedShootoutZamboniUsers.Remove(zamboniUser);
+        var queuedUser = Manager.GetQueuedUser(zamboniUser);
+        if (queuedUser != null) Manager.QueuedUsers.Remove(queuedUser);
         Logger.Info(zamboniUser.Username + " unqueued");
         return Task.FromResult(new NullStruct());
     }
@@ -152,6 +115,25 @@ public class GameManagerComponent : GameManagerBase.Server
             mGameRoster = zamboniGame.ReplicatedGamePlayers
         });
     }
+
+    //Yes, this is the request that client sends when he wants to create an OTP Lobby. Real ea type shi
+    // STILL WIP
+    // public override Task<JoinGameResponse> ResetDedicatedServerAsync(CreateGameRequest request, BlazeRpcContext context)
+    // {
+    //     var host = Manager.GetZamboniUser(context.BlazeConnection);
+    //
+    //     var zamboniGame = new ZamboniGame(host, request);
+    //     Task.Run(async () =>
+    //     {
+    //         await Task.Delay(100);
+    //         zamboniGame.AddGameParticipant(host);
+    //     });
+    //
+    //     return Task.FromResult(new JoinGameResponse
+    //     {
+    //         mGameId = zamboniGame.GameId
+    //     });
+    // }
 
     public override Task<JoinGameResponse> JoinGameAsync(JoinGameRequest request, BlazeRpcContext context)
     {
@@ -303,24 +285,12 @@ public class GameManagerComponent : GameManagerBase.Server
                 case PlayerNetConnectionStatus.DISCONNECTED:
                 {
                     var zamboniUser = Manager.GetZamboniUser(playerConnectionStatus.mTargetPlayer);
-                    if (zamboniGame.ZamboniUsers.Contains(zamboniUser))
-                    {
-                        Logger.Warn("Zamboniuser Existed in game object");
-                        zamboniGame.RemoveGameParticipant(zamboniUser);
-                        break;
-                    }
-
-                    Logger.Warn("Zamboniuser Didnt exist in game object");
-                    var leavePacket = new NotifyPlayerRemoved
-                    {
-                        mPlayerRemovedTitleContext = 0, //What is this?
-                        mGameId = request.mGameId,
-                        mPlayerId = playerConnectionStatus.mTargetPlayer,
-                        mPlayerRemovedReason = PlayerRemovedReason.PLAYER_CONN_LOST //General leave message?
-                    };
-                    zamboniGame.NotifyParticipants(leavePacket);
+                    zamboniGame.RemoveGameParticipant(zamboniUser);
                     break;
                 }
+                default:
+                    Logger.Debug("Unknown player connection status: " + playerConnectionStatus.mPlayerNetConnectionStatus);
+                    break;
             }
 
         return Task.FromResult(new NullStruct());
