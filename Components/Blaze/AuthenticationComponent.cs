@@ -75,7 +75,7 @@ public class AuthenticationComponent : AuthenticationComponentBase.Server
             mUserId = (long)ticket.UserId
         };
         
-        ServerManager.AddServerPlayer(new ServerPlayer(context.BlazeConnection, userIdentification, extendedData, sessionInfo));
+        new ServerPlayer(context.BlazeConnection, userIdentification, extendedData, sessionInfo);
 
         Task.Run(async () =>
         {
