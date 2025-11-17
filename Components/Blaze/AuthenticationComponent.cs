@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Blaze2SDK.Blaze;
@@ -12,7 +13,6 @@ namespace Zamboni.Components.Blaze;
 
 public class AuthenticationComponent : AuthenticationComponentBase.Server
 {
-    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     public override Task<ConsoleLoginResponse> Ps3LoginAsync(PS3LoginRequest request, BlazeRpcContext context)
     {
@@ -31,72 +31,77 @@ public class AuthenticationComponent : AuthenticationComponentBase.Server
         externalBlob.Add(0x1);
         externalBlob.AddRange(new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
 
-        Logger.Warn(ticket.OnlineId + " connected");
-        var user = new ZamboniUser(context.BlazeConnection, ticket.UserId, ticket.OnlineId, externalBlob.ToArray());
+        UserIdentification userIdentification = new UserIdentification
+        {
+            mAccountId = (long)ticket.UserId,
+            mAccountLocale = 1701729619,
+            mExternalBlob = externalBlob.ToArray(),
+            mExternalId = ticket.UserId,
+            mBlazeId = (uint)ticket.UserId,
+            mName = ticket.OnlineId,
+            mPersonaId = ticket.OnlineId
+        };
+        
+        UserSessionExtendedData extendedData = new UserSessionExtendedData
+        {
+            mAddress = null!,
+            mBestPingSiteAlias = "qos",
+            mClientAttributes = new SortedDictionary<uint, int>(),
+            mCountry = "",
+            mDataMap = new SortedDictionary<uint, int>(),
+            mHardwareFlags = HardwareFlags.None,
+            mLatencyList = new List<int>
+            {
+                10
+            },
+            mQosData = default,
+            mUserInfoAttribute = 0,
+            mBlazeObjectIdList = new List<ulong>()
+        };
+        
+        SessionInfo sessionInfo = new SessionInfo
+        {
+            mBlazeUserId = (uint)ticket.UserId,
+            mSessionKey = ticket.UserId.ToString(),
+            mEmail = "",
+            mPersonaDetails = new PersonaDetails
+            {
+                mDisplayName = ticket.OnlineId,
+                mLastAuthenticated = 0,
+                mPersonaId = (long)ticket.UserId,
+                mExtId = ticket.UserId,
+                mExtType = ExternalRefType.PS3
+            },
+            mUserId = (long)ticket.UserId
+        };
+        
+        ServerManager.AddServerPlayer(new ServerPlayer(context.BlazeConnection, userIdentification, extendedData, sessionInfo));
 
         Task.Run(async () =>
         {
             await Task.Delay(100);
-            UserSessionsBase.Server.NotifyUserAddedAsync(user.BlazeServerConnection, new UserIdentification
-            {
-                mAccountLocale = 1701729619,
-                mExternalId = ticket.UserId,
-                mBlazeId = (uint)ticket.UserId,
-                mName = ticket.OnlineId,
-                mPersonaId = ticket.OnlineId,
-                mExternalBlob = externalBlob.ToArray()
-            });
+            UserSessionsBase.Server.NotifyUserAddedAsync(context.BlazeConnection, userIdentification);
         });
 
         Task.Run(async () =>
         {
             await Task.Delay(200);
-            UserSessionsBase.Server.NotifyUserSessionExtendedDataUpdateAsync(user.BlazeServerConnection,
+            UserSessionsBase.Server.NotifyUserSessionExtendedDataUpdateAsync(context.BlazeConnection,
                 new UserSessionExtendedDataUpdate
                 {
-                    mExtendedData = new UserSessionExtendedData
-                    {
-                        mAddress = null!,
-                        mBestPingSiteAlias = "qos",
-                        mClientAttributes = new SortedDictionary<uint, int>(),
-                        mCountry = "",
-                        mDataMap = new SortedDictionary<uint, int>(),
-                        mHardwareFlags = HardwareFlags.None,
-                        mLatencyList = new List<int>
-                        {
-                            10
-                        },
-                        mQosData = default,
-                        mUserInfoAttribute = 0,
-                        mBlazeObjectIdList = new List<ulong>()
-                    },
-                    mUserId = (uint)ticket.UserId
+                    mExtendedData = extendedData,
+                    mUserId = userIdentification.mBlazeId
                 });
         });
 
         return Task.FromResult(new ConsoleLoginResponse
         {
-            mSessionInfo = new SessionInfo
-            {
-                mBlazeUserId = (uint)ticket.UserId,
-                mSessionKey = ticket.UserId.ToString(),
-                mEmail = "",
-                mPersonaDetails = new PersonaDetails
-                {
-                    mDisplayName = ticket.OnlineId,
-                    mLastAuthenticated = 0,
-                    mPersonaId = (long)ticket.UserId,
-                    mExtId = ticket.UserId,
-                    mExtType = ExternalRefType.PS3
-                },
-                mUserId = (long)ticket.UserId
-            },
+            mSessionInfo = sessionInfo,
             mTosHost = "",
             mTosUri = ""
         });
     }
-
-
+    
     public override Task<NullStruct> LogoutAsync(NullStruct request, BlazeRpcContext context)
     {
         return Task.FromResult(new NullStruct());

@@ -2,18 +2,18 @@ using Blaze2SDK.Blaze.GameManager;
 
 namespace Zamboni;
 
-public class QueuedUser
+public class QueuedPlayer
 {
     private static uint _nextId = 1;
 
-    public QueuedUser(ZamboniUser zamboniUser, StartMatchmakingRequest startMatchmakingRequest)
+    public QueuedPlayer(ServerPlayer serverPlayer, StartMatchmakingRequest startMatchmakingRequest)
     {
-        ZamboniUser = zamboniUser;
+        ServerPlayer = serverPlayer;
         MatchmakingSessionId = _nextId++;
         StartMatchmakingRequest = startMatchmakingRequest;
     }
 
-    public ZamboniUser ZamboniUser { get; }
+    public ServerPlayer ServerPlayer { get; }
     public uint MatchmakingSessionId { get; }
     public StartMatchmakingRequest StartMatchmakingRequest { get; }
 }

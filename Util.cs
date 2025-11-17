@@ -3,7 +3,7 @@ using System.Net;
 
 namespace Zamboni;
 
-public class Util
+public static class Util
 {
     public static uint GetIPAddressAsUInt(string ipAddress)
     {

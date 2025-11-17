@@ -11,15 +11,15 @@ public class ZamboniCoreServer : BlazeServer
 
     public override Task OnProtoFireDisconnectAsync(ProtoFireConnection connection)
     {
-        var zamboniUser = Manager.GetZamboniUser(connection);
-        if (zamboniUser == null) return base.OnProtoFireDisconnectAsync(connection);
-        Manager.ZamboniUsers.Remove(zamboniUser);
+        var serverPlayer = ServerManager.GetServerPlayer(connection);
+        if (serverPlayer == null) return base.OnProtoFireDisconnectAsync(connection);
+        ServerManager.RemoveServerPlayer(serverPlayer);
 
-        var queuedUser = Manager.GetQueuedUser(zamboniUser);
-        if (queuedUser != null) Manager.QueuedUsers.Remove(queuedUser);
+        var queuedPlayer = ServerManager.GetQueuedPlayer(serverPlayer);
+        if (queuedPlayer != null) ServerManager.RemoveQueuedPlayer(queuedPlayer);
 
-        var zamboniGame = Manager.GetZamboniGame(zamboniUser);
-        if (zamboniGame != null) zamboniGame.RemoveGameParticipant(zamboniUser);
+        var serverGame = ServerManager.GetServerGame(serverPlayer);
+        if (serverGame != null) serverGame.RemoveGameParticipant(serverPlayer);
 
         return base.OnProtoFireDisconnectAsync(connection);
     }

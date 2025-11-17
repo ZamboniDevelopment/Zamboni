@@ -24,129 +24,127 @@ public class GameManagerComponent : GameManagerBase.Server
 
     private static void OnTimedEvent(object sender, ElapsedEventArgs e)
     {
-        if (Manager.QueuedUsers.Count <= 1) return;
+        if (ServerManager.GetQueuedPlayers().Count <= 1) return;
 
-        var grouped = Manager.QueuedUsers.GroupBy(u => u.StartMatchmakingRequest.mCriteriaData.mGenericRulePrefsList.Find(prefs => prefs.mRuleName.Equals("OSDK_gameMode")).mDesiredValues[0]);
+        var grouped = ServerManager.GetQueuedPlayers().GroupBy(u => u.StartMatchmakingRequest.mCriteriaData.mGenericRulePrefsList.Find(prefs => prefs.mRuleName.Equals("OSDK_gameMode")).mDesiredValues[0]);
 
         foreach (var group in grouped)
         {
-            var users = group.ToList();
+            var players = group.ToList();
 
-            while (users.Count >= 2)
+            while (players.Count >= 2)
             {
-                var queuedUserA = users[0];
-                var queuedUserB = users[1];
+                var queuedPlayerA = players[0];
+                var queuedPlayerB = players[1];
 
-                users.RemoveRange(0, 2);
-                Manager.QueuedUsers.Remove(queuedUserA);
-                Manager.QueuedUsers.Remove(queuedUserB);
+                players.RemoveRange(0, 2);
+                ServerManager.RemoveQueuedPlayer(queuedPlayerA);
+                ServerManager.RemoveQueuedPlayer(queuedPlayerB);
 
-                SendToMatchMakingGame(queuedUserA, queuedUserB, queuedUserA.StartMatchmakingRequest, group.Key);
+                SendToMatchMakingGame(queuedPlayerA, queuedPlayerB, queuedPlayerA.StartMatchmakingRequest, group.Key);
             }
         }
     }
 
-    private static void SendToMatchMakingGame(QueuedUser host, QueuedUser notHost, StartMatchmakingRequest startMatchmakingRequest, string gameMode)
+    private static void SendToMatchMakingGame(QueuedPlayer host, QueuedPlayer notHost, StartMatchmakingRequest startMatchmakingRequest, string gameMode)
     {
-        var zamboniGame = new ZamboniGame(host.ZamboniUser, startMatchmakingRequest, gameMode);
+        var serverGame = new ServerGame(host.ServerPlayer, startMatchmakingRequest, gameMode);
 
-        zamboniGame.AddGameParticipant(host.ZamboniUser, host.MatchmakingSessionId);
-        zamboniGame.AddGameParticipant(notHost.ZamboniUser, notHost.MatchmakingSessionId);
+        serverGame.AddGameParticipant(host.ServerPlayer, host.MatchmakingSessionId);
+        serverGame.AddGameParticipant(notHost.ServerPlayer, notHost.MatchmakingSessionId);
 
-        NotifyMatchmakingFinishedAsync(host.ZamboniUser.BlazeServerConnection, new NotifyMatchmakingFinished
+        NotifyMatchmakingFinishedAsync(host.ServerPlayer.BlazeServerConnection, new NotifyMatchmakingFinished
         {
             mFitScore = 10,
-            mGameId = zamboniGame.GameId,
+            mGameId = serverGame.ReplicatedGameData.mGameId,
             mMaxPossibleFitScore = 10,
             mSessionId = host.MatchmakingSessionId,
             mMatchmakingResult = MatchmakingResult.SUCCESS_JOINED_EXISTING_GAME,
-            mUserSessionId = (uint)host.ZamboniUser.UserId
+            mUserSessionId = host.ServerPlayer.UserIdentification.mBlazeId
         });
 
-        NotifyMatchmakingFinishedAsync(notHost.ZamboniUser.BlazeServerConnection, new NotifyMatchmakingFinished
+        NotifyMatchmakingFinishedAsync(notHost.ServerPlayer.BlazeServerConnection, new NotifyMatchmakingFinished
         {
             mFitScore = 10,
-            mGameId = zamboniGame.GameId,
+            mGameId = serverGame.ReplicatedGameData.mGameId,
             mMaxPossibleFitScore = 10,
             mSessionId = notHost.MatchmakingSessionId,
             mMatchmakingResult = MatchmakingResult.SUCCESS_JOINED_EXISTING_GAME,
-            mUserSessionId = (uint)notHost.ZamboniUser.UserId
+            mUserSessionId = notHost.ServerPlayer.UserIdentification.mBlazeId
         });
     }
 
     public override Task<StartMatchmakingResponse> StartMatchmakingAsync(StartMatchmakingRequest request, BlazeRpcContext context)
     {
-        var zamboniUser = Manager.GetZamboniUser(context.BlazeConnection);
+        var serverPlayer = ServerManager.GetServerPlayer(context.BlazeConnection);
 
-        var queuedUser = new QueuedUser(zamboniUser, request);
-        Manager.QueuedUsers.Add(queuedUser);
+        var queuedPlayer = new QueuedPlayer(serverPlayer, request);
+        ServerManager.AddQueuedPlayer(queuedPlayer);
 
         return Task.FromResult(new StartMatchmakingResponse
         {
-            mSessionId = queuedUser.MatchmakingSessionId
+            mSessionId = queuedPlayer.MatchmakingSessionId
         });
     }
 
     public override Task<NullStruct> CancelMatchmakingAsync(CancelMatchmakingRequest request, BlazeRpcContext context)
     {
-        var zamboniUser = Manager.GetZamboniUser(context.BlazeConnection);
-        var queuedUser = Manager.GetQueuedUser(zamboniUser);
-        if (queuedUser != null) Manager.QueuedUsers.Remove(queuedUser);
-        Logger.Info(zamboniUser.Username + " unqueued");
+        var serverPlayer = ServerManager.GetServerPlayer(context.BlazeConnection);
+        var queuedPlayer = ServerManager.GetQueuedPlayer(serverPlayer);
+        if (queuedPlayer != null) ServerManager.RemoveQueuedPlayer(queuedPlayer);
         return Task.FromResult(new NullStruct());
     }
 
     public override Task<CreateGameResponse> CreateGameAsync(CreateGameRequest request, BlazeRpcContext context)
     {
-        var host = Manager.GetZamboniUser(context.BlazeConnection);
+        var host = ServerManager.GetServerPlayer(context.BlazeConnection);
 
-        var zamboniGame = new ZamboniGame(host, request);
+        var serverGame = new ServerGame(host, request);
         Task.Run(async () =>
         {
             await Task.Delay(100);
-            zamboniGame.AddGameParticipant(host);
+            serverGame.AddGameParticipant(host);
         });
 
         return Task.FromResult(new CreateGameResponse
         {
-            mGameData = zamboniGame.ReplicatedGameData,
-            mGameId = zamboniGame.GameId,
-            mHostId = (uint)host.UserId,
-            mGameRoster = zamboniGame.ReplicatedGamePlayers
+            mGameData = serverGame.ReplicatedGameData,
+            mGameId = serverGame.ReplicatedGameData.mGameId,
+            mHostId = host.UserIdentification.mBlazeId,
+            mGameRoster = serverGame.ReplicatedGamePlayers
         });
     }
 
-    //Yes, this is the request that client sends when he wants to create an OTP Lobby. Real ea type shi
-    // STILL WIP
-    // public override Task<JoinGameResponse> ResetDedicatedServerAsync(CreateGameRequest request, BlazeRpcContext context)
-    // {
-    //     var host = Manager.GetZamboniUser(context.BlazeConnection);
-    //
-    //     var zamboniGame = new ZamboniGame(host, request);
-    //     Task.Run(async () =>
-    //     {
-    //         await Task.Delay(100);
-    //         zamboniGame.AddGameParticipant(host);
-    //     });
-    //
-    //     return Task.FromResult(new JoinGameResponse
-    //     {
-    //         mGameId = zamboniGame.GameId
-    //     });
-    // }
+    // Yes, this is the request that client sends when he wants to create an OTP Lobby. Real ea type shi
+    //  STILL WIP
+     public override Task<JoinGameResponse> ResetDedicatedServerAsync(CreateGameRequest request, BlazeRpcContext context)
+     {
+         var host = ServerManager.GetServerPlayer(context.BlazeConnection);
+    
+         var serverGame = new ServerGame(host, request);
+         Task.Run(async () =>
+         {
+             await Task.Delay(100);
+             serverGame.AddGameParticipant(host);
+         });
+    
+         return Task.FromResult(new JoinGameResponse
+         {
+             mGameId = serverGame.ReplicatedGameData.mGameId
+         });
+     }
 
     public override Task<JoinGameResponse> JoinGameAsync(JoinGameRequest request, BlazeRpcContext context)
     {
-        var accepter = Manager.GetZamboniUser(context.BlazeConnection);
-        var game = Manager.GetZamboniGame(request.mGameId);
+        var accepter = ServerManager.GetServerPlayer(context.BlazeConnection);
+        var game = ServerManager.GetServerGame(request.mGameId);
 
         Task.Run(async () =>
         {
             await Task.Delay(100);
             game.AddGameParticipant(accepter);
         });
-
-
+        
         return Task.FromResult(new JoinGameResponse
         {
             mGameId = request.mGameId
@@ -155,28 +153,28 @@ public class GameManagerComponent : GameManagerBase.Server
 
     public override Task<NullStruct> RemovePlayerAsync(RemovePlayerRequest request, BlazeRpcContext context)
     {
-        var zamboniGame = Manager.GetZamboniGame(request.mGameId);
-        var zamboniUser = Manager.GetZamboniUser(request.mPlayerId);
+        var serverGame = ServerManager.GetServerGame(request.mGameId);
+        var serverPlayer = ServerManager.GetServerPlayer(request.mPlayerId);
 
-        if (zamboniGame == null || zamboniUser == null) return Task.FromResult(new NullStruct());
+        if (serverGame == null || serverPlayer == null) return Task.FromResult(new NullStruct());
 
-        zamboniGame.RemoveGameParticipant(zamboniUser);
+        serverGame.RemoveGameParticipant(serverPlayer);
         return Task.FromResult(new NullStruct());
     }
 
     public override Task<NullStruct> UpdateGameSessionAsync(UpdateGameSessionRequest request, BlazeRpcContext context)
     {
-        var zamboniGame = Manager.GetZamboniGame(request.mGameId);
-        if (zamboniGame == null) return Task.FromResult(new NullStruct());
+        var serverGame = ServerManager.GetServerGame(request.mGameId);
+        if (serverGame == null) return Task.FromResult(new NullStruct());
 
-        var replicatedGameData = zamboniGame.ReplicatedGameData;
+        var replicatedGameData = serverGame.ReplicatedGameData;
         replicatedGameData.mXnetNonce = request.mXnetNonce;
         replicatedGameData.mXnetSession = request.mXnetSession;
 
-        zamboniGame.ReplicatedGameData = replicatedGameData;
+        serverGame.ReplicatedGameData = replicatedGameData;
 
-        foreach (var zamboniUser in zamboniGame.ZamboniUsers)
-            NotifyGameSessionUpdatedAsync(zamboniUser.BlazeServerConnection, new GameSessionUpdatedNotification
+        foreach (var serverPlayer in serverGame.ServerPlayers)
+            NotifyGameSessionUpdatedAsync(serverPlayer.BlazeServerConnection, new GameSessionUpdatedNotification
             {
                 mGameId = request.mGameId,
                 mXnetNonce = request.mXnetNonce,
@@ -188,17 +186,17 @@ public class GameManagerComponent : GameManagerBase.Server
 
     public override Task<NullStruct> FinalizeGameCreationAsync(UpdateGameSessionRequest request, BlazeRpcContext context)
     {
-        var zamboniGame = Manager.GetZamboniGame(request.mGameId);
-        if (zamboniGame == null) return Task.FromResult(new NullStruct());
+        var serverGame = ServerManager.GetServerGame(request.mGameId);
+        if (serverGame == null) return Task.FromResult(new NullStruct());
 
-        var replicatedGameData = zamboniGame.ReplicatedGameData;
+        var replicatedGameData = serverGame.ReplicatedGameData;
         replicatedGameData.mXnetNonce = request.mXnetNonce;
         replicatedGameData.mXnetSession = request.mXnetSession;
 
-        zamboniGame.ReplicatedGameData = replicatedGameData;
+        serverGame.ReplicatedGameData = replicatedGameData;
 
-        foreach (var zamboniUser in zamboniGame.ZamboniUsers)
-            NotifyGameSessionUpdatedAsync(zamboniUser.BlazeServerConnection, new GameSessionUpdatedNotification
+        foreach (var serverPlayer in serverGame.ServerPlayers)
+            NotifyGameSessionUpdatedAsync(serverPlayer.BlazeServerConnection, new GameSessionUpdatedNotification
             {
                 mGameId = request.mGameId,
                 mXnetNonce = request.mXnetNonce,
@@ -209,16 +207,16 @@ public class GameManagerComponent : GameManagerBase.Server
 
     public override Task<NullStruct> AdvanceGameStateAsync(AdvanceGameStateRequest request, BlazeRpcContext context)
     {
-        var zamboniGame = Manager.GetZamboniGame(request.mGameId);
-        if (zamboniGame == null) return Task.FromResult(new NullStruct());
+        var serverGame = ServerManager.GetServerGame(request.mGameId);
+        if (serverGame == null) return Task.FromResult(new NullStruct());
 
-        var replicatedGameData = zamboniGame.ReplicatedGameData;
+        var replicatedGameData = serverGame.ReplicatedGameData;
         replicatedGameData.mGameState = request.mNewGameState;
 
-        zamboniGame.ReplicatedGameData = replicatedGameData;
+        serverGame.ReplicatedGameData = replicatedGameData;
 
-        foreach (var zamboniUser in zamboniGame.ZamboniUsers)
-            NotifyGameStateChangeAsync(zamboniUser.BlazeServerConnection, new NotifyGameStateChange
+        foreach (var serverPlayer in serverGame.ServerPlayers)
+            NotifyGameStateChangeAsync(serverPlayer.BlazeServerConnection, new NotifyGameStateChange
             {
                 mGameId = request.mGameId,
                 mNewGameState = request.mNewGameState
@@ -228,16 +226,16 @@ public class GameManagerComponent : GameManagerBase.Server
 
     public override Task<NullStruct> SetGameSettingsAsync(SetGameSettingsRequest request, BlazeRpcContext context)
     {
-        var zamboniGame = Manager.GetZamboniGame(request.mGameId);
-        if (zamboniGame == null) return Task.FromResult(new NullStruct());
+        var serverGame = ServerManager.GetServerGame(request.mGameId);
+        if (serverGame == null) return Task.FromResult(new NullStruct());
 
-        var replicatedGameData = zamboniGame.ReplicatedGameData;
+        var replicatedGameData = serverGame.ReplicatedGameData;
         replicatedGameData.mGameSettings = request.mGameSettings;
 
-        zamboniGame.ReplicatedGameData = replicatedGameData;
+        serverGame.ReplicatedGameData = replicatedGameData;
 
-        foreach (var zamboniUser in zamboniGame.ZamboniUsers)
-            NotifyGameSettingsChangeAsync(zamboniUser.BlazeServerConnection, new NotifyGameSettingsChange
+        foreach (var serverPlayer in serverGame.ServerPlayers)
+            NotifyGameSettingsChangeAsync(serverPlayer.BlazeServerConnection, new NotifyGameSettingsChange
             {
                 mGameSettings = request.mGameSettings,
                 mGameId = request.mGameId
@@ -247,8 +245,8 @@ public class GameManagerComponent : GameManagerBase.Server
 
     public override Task<NullStruct> UpdateMeshConnectionAsync(UpdateMeshConnectionRequest request, BlazeRpcContext context)
     {
-        var zamboniGame = Manager.GetZamboniGame(request.mGameId);
-        if (zamboniGame == null) return Task.FromResult(new NullStruct());
+        var serverGame = ServerManager.GetServerGame(request.mGameId);
+        if (serverGame == null) return Task.FromResult(new NullStruct());
 
         foreach (var playerConnectionStatus in request.mMeshConnectionStatusList)
             switch (playerConnectionStatus.mPlayerNetConnectionStatus)
@@ -261,14 +259,14 @@ public class GameManagerComponent : GameManagerBase.Server
                         mPlayerId = playerConnectionStatus.mTargetPlayer,
                         mPlayerState = PlayerState.ACTIVE_CONNECTED
                     };
-                    zamboniGame.NotifyParticipants(statePacket);
+                    serverGame.NotifyParticipants(statePacket);
 
                     var joinCompletedPacket = new NotifyPlayerJoinCompleted
                     {
                         mGameId = request.mGameId,
                         mPlayerId = playerConnectionStatus.mTargetPlayer
                     };
-                    zamboniGame.NotifyParticipants(joinCompletedPacket);
+                    serverGame.NotifyParticipants(joinCompletedPacket);
                     break;
                 }
                 case PlayerNetConnectionStatus.ESTABLISHING_CONNECTION:
@@ -279,13 +277,13 @@ public class GameManagerComponent : GameManagerBase.Server
                         mPlayerId = playerConnectionStatus.mTargetPlayer,
                         mPlayerState = PlayerState.ACTIVE_CONNECTING
                     };
-                    zamboniGame.NotifyParticipants(statePacket);
+                    serverGame.NotifyParticipants(statePacket);
                     break;
                 }
                 case PlayerNetConnectionStatus.DISCONNECTED:
                 {
-                    var zamboniUser = Manager.GetZamboniUser(playerConnectionStatus.mTargetPlayer);
-                    zamboniGame.RemoveGameParticipant(zamboniUser);
+                    var serverPlayer = ServerManager.GetServerPlayer(playerConnectionStatus.mTargetPlayer);
+                    serverGame.RemoveGameParticipant(serverPlayer);
                     break;
                 }
                 default:

@@ -22,7 +22,8 @@ namespace Zamboni;
 // tcp.port == 17499 || udp.port == 17499 || tcp.port == 3659 || udp.port == 3659  || tcp.port == 17500 || udp.port == 17500 || tcp.port == 17501 || udp.port == 17501 || tcp.port == 17502 || udp.port == 17502 || tcp.port == 17503 || udp.port == 17503
 internal class Program
 {
-    public const string Version = "1.3.1";
+    public const string Version = "1.3.4";
+    public const int RedirectorPort = 42100;
 
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -42,7 +43,7 @@ internal class Program
         var commandTask = Task.Run(StartCommandListener);
         var redirectorTask = StartRedirectorServer();
         var coreTask = StartCoreServer();
-        var apiTask = new RestApi().StartAsync();
+        var apiTask = new Api().StartAsync();
         Logger.Warn("Zamboni server " + Version + " started");
         await Task.WhenAll(redirectorTask, coreTask, commandTask, apiTask);
     }
@@ -74,10 +75,10 @@ internal class Program
             ZamboniConfig = new ZamboniConfig();
             var yaml = serializer.Serialize(ZamboniConfig);
 
-            const string comments = "# GameServerIp: 'auto' = automatically detect public IP or specify a manual IP address, where GameServer is run on\n" +
-                                    "# GameServerPort: Port for GameServer to listen on. (Redirector server lives on 42100, clients request there)\n" +
-                                    "# LogLevel: Valid values: Trace, Debug, Info, Warn, Error, Fatal, Off.\n" +
-                                    "# DatabaseConnectionString: Connection string to PostgreSQL, for saving data. (Not required)\n\n";
+            string comments = "# GameServerIp: 'auto' = automatically detect public IP or specify a manual IP address, where GameServer is run on\n" +
+                              "# GameServerPort: Port for GameServer to listen on. (Redirector server lives on " + RedirectorPort + ", clients request there)\n" +
+                              "# LogLevel: Valid values: Trace, Debug, Info, Warn, Error, Fatal, Off.\n" +
+                              "# DatabaseConnectionString: Connection string to PostgreSQL, for saving data. (Not required)\n\n";
             File.WriteAllText(configFile, comments + yaml);
             Logger.Warn("Config file created: " + configFile);
             return;
@@ -94,7 +95,7 @@ internal class Program
 
     private static async Task StartRedirectorServer()
     {
-        var redirector = Blaze2.CreateBlazeServer("RedirectorServer", new IPEndPoint(IPAddress.Any, 42100));
+        var redirector = Blaze2.CreateBlazeServer("RedirectorServer", new IPEndPoint(IPAddress.Any, RedirectorPort));
         redirector.AddComponent<RedirectorComponent>();
         await redirector.Start(-1).ConfigureAwait(false);
     }
@@ -142,13 +143,13 @@ internal class Program
                     Logger.Info("Zamboni " + Version);
                     Logger.Info("Server running on ip: " + GameServerIp + " (" + PublicIp + ")");
                     Logger.Info("GameServerPort port: " + ZamboniConfig.GameServerPort);
-                    Logger.Info("Redirector port: 42100");
-                    Logger.Info("Online Users: " + Manager.ZamboniUsers.Count);
-                    foreach (var user in Manager.ZamboniUsers) Logger.Info(user.Username);
-                    Logger.Info("Queued Total Users: " + Manager.QueuedUsers.Count);
-                    foreach (var qU in Manager.QueuedUsers) Logger.Info(qU.ZamboniUser.Username);
-                    Logger.Info("Zamboni Games: " + Manager.ZamboniGames.Count);
-                    foreach (var zg in Manager.ZamboniGames) Logger.Info(zg);
+                    Logger.Info("Redirector port: "+RedirectorPort);
+                    Logger.Info("Online Players: " + ServerManager.GetServerPlayers().Count);
+                    foreach (var serverPlayer in ServerManager.GetServerPlayers()) Logger.Info(serverPlayer.UserIdentification.mName);
+                    Logger.Info("Queued Total Players: " + ServerManager.GetQueuedPlayers().Count);
+                    foreach (var queuedPlayer in ServerManager.GetQueuedPlayers()) Logger.Info(queuedPlayer.ServerPlayer.UserIdentification.mName);
+                    Logger.Info("Server Games: " + ServerManager.GetServerGames().Count);
+                    foreach (var serverGame in ServerManager.GetServerGames()) Logger.Info(serverGame);
                     break;
 
                 default:

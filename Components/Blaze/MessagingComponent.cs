@@ -21,14 +21,14 @@ internal class MessagingComponent : MessagingComponentBase.Server
     {
         return Task.FromResult(new PurgeMessageResponse
         {
-            mCount = 1
+            mCount = 0
         });
     }
 
     public override Task<SendMessageResponse> SendMessageAsync(ClientMessage request, BlazeRpcContext context)
     {
         var messageId = ++_messageIdCounter;
-        var target = Manager.GetZamboniUser(request.mTarget);
+        var target = ServerManager.GetServerPlayer(request.mTarget);
 
         //If target is offline, we should store the message and send it when he comes online (Not a priority)
         if (target == null)
@@ -41,9 +41,9 @@ internal class MessagingComponent : MessagingComponentBase.Server
         {
             mFlags = 0,
             mMessageId = messageId,
-            mSourceName = Manager.GetZamboniUser(context.BlazeConnection).Username,
+            mSourceName = ServerManager.GetServerPlayer(context.BlazeConnection).UserIdentification.mName,
             mPayload = request,
-            mSource = Manager.GetZamboniUser(context.BlazeConnection).MessengerId,
+            mSource = ServerManager.GetServerPlayer(context.BlazeConnection).MessengerId,
             mTimestamp = 0
         });
 
