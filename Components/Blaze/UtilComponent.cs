@@ -142,4 +142,8 @@ public class UtilComponent : UtilComponentBase.Server
     {
         return Task.FromResult(new NullStruct());
     }
+    public override Task<UserSettingsLoadAllResponse> UserSettingsLoadAllAsync(NullStruct request, BlazeRpcContext context)
+    {
+        return Task.FromResult(new UserSettingsLoadAllResponse());
+    }
 }
