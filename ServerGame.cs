@@ -174,18 +174,15 @@ public class ServerGame
             mPlayerId = serverPlayer.UserIdentification.mBlazeId,
             mPlayerRemovedReason = PlayerRemovedReason.PLAYER_LEFT
         });
-        if (ServerPlayers.Count == 1)
+        if (ServerPlayers.Count != 1) return;
+        NotifyParticipants(new NotifyPlayerRemoved
         {
-            NotifyParticipants(new NotifyPlayerRemoved
-            {
-                mPlayerRemovedTitleContext = 0, //??
-                mGameId = ReplicatedGameData.mGameId,
-                mPlayerId = ServerPlayers[0].UserIdentification.mBlazeId,
-                mPlayerRemovedReason = PlayerRemovedReason.GAME_DESTROYED
-            });
-            ServerManager.RemoveServerGame(this);
-        }
-
+            mPlayerRemovedTitleContext = 0, //??
+            mGameId = ReplicatedGameData.mGameId,
+            mPlayerId = ServerPlayers[0].UserIdentification.mBlazeId,
+            mPlayerRemovedReason = PlayerRemovedReason.GAME_DESTROYED
+        });
+        ServerManager.RemoveServerGame(this);
     }
 
     public void NotifyParticipants(NotifyGamePlayerStateChange playerStateChange)

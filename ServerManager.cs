@@ -13,10 +13,7 @@ public static class ServerManager
     public static void AddServerPlayer(ServerPlayer serverPlayer)
     {
         var existing = GetServerPlayer(serverPlayer.UserIdentification.mName);
-        if (existing != null)
-        {
-            RemoveServerPlayer(existing);
-        }
+        if (existing != null) RemoveServerPlayer(existing);
         ServerPlayers.Add(serverPlayer);
     }
 
@@ -60,42 +57,42 @@ public static class ServerManager
         return ServerGames;
     }
 
-    public static ServerPlayer GetServerPlayer(BlazeServerConnection blazeServerConnection)
+    public static ServerPlayer? GetServerPlayer(BlazeServerConnection blazeServerConnection)
     {
         return ServerPlayers.FirstOrDefault(serverPlayer => serverPlayer.BlazeServerConnection.Equals(blazeServerConnection));
     }
 
-    public static ServerPlayer GetServerPlayer(ProtoFireConnection protoFireConnection)
+    public static ServerPlayer? GetServerPlayer(ProtoFireConnection protoFireConnection)
     {
         return ServerPlayers.FirstOrDefault(serverPlayer => serverPlayer.BlazeServerConnection.ProtoFireConnection.Equals(protoFireConnection));
     }
 
-    public static ServerPlayer GetServerPlayer(uint userId)
+    public static ServerPlayer? GetServerPlayer(uint userId)
     {
         return ServerPlayers.FirstOrDefault(serverPlayer => serverPlayer.UserIdentification.mBlazeId.Equals(userId));
     }
 
-    public static ServerPlayer GetServerPlayer(ulong messengerId)
+    public static ServerPlayer? GetServerPlayer(ulong messengerId)
     {
         return ServerPlayers.FirstOrDefault(serverPlayer => serverPlayer.MessengerId.Equals(messengerId));
     }
 
-    public static ServerPlayer GetServerPlayer(string name)
+    public static ServerPlayer? GetServerPlayer(string name)
     {
         return ServerPlayers.FirstOrDefault(serverPlayer => serverPlayer.UserIdentification.mName.Equals(name));
     }
 
-    public static ServerGame GetServerGame(uint id)
+    public static ServerGame? GetServerGame(uint id)
     {
         return ServerGames.FirstOrDefault(serverGame => serverGame.ReplicatedGameData.mGameId.Equals(id));
     }
 
-    public static ServerGame GetServerGame(ServerPlayer serverPlayer)
+    public static ServerGame? GetServerGame(ServerPlayer serverPlayer)
     {
         return ServerGames.FirstOrDefault(serverGame => serverGame.ServerPlayers.Contains(serverPlayer));
     }
 
-    public static QueuedPlayer GetQueuedPlayer(ServerPlayer serverPlayer)
+    public static QueuedPlayer? GetQueuedPlayer(ServerPlayer serverPlayer)
     {
         return QueuedPlayers.FirstOrDefault(queuedPlayer => queuedPlayer.ServerPlayer.Equals(serverPlayer));
     }

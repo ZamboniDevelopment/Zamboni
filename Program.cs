@@ -22,7 +22,7 @@ namespace Zamboni;
 // tcp.port == 17499 || udp.port == 17499 || tcp.port == 3659 || udp.port == 3659  || tcp.port == 17500 || udp.port == 17500 || tcp.port == 17501 || udp.port == 17501 || tcp.port == 17502 || udp.port == 17502 || tcp.port == 17503 || udp.port == 17503
 internal class Program
 {
-    public const string Version = "1.3.4";
+    public const string Name = "Zamboni 1.3.4";
     public const int RedirectorPort = 42100;
 
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -44,7 +44,7 @@ internal class Program
         var redirectorTask = StartRedirectorServer();
         var coreTask = StartCoreServer();
         var apiTask = new Api().StartAsync();
-        Logger.Warn("Zamboni server " + Version + " started");
+        Logger.Warn(Name + " started");
         await Task.WhenAll(redirectorTask, coreTask, commandTask, apiTask);
     }
 
@@ -75,10 +75,10 @@ internal class Program
             ZamboniConfig = new ZamboniConfig();
             var yaml = serializer.Serialize(ZamboniConfig);
 
-            string comments = "# GameServerIp: 'auto' = automatically detect public IP or specify a manual IP address, where GameServer is run on\n" +
-                              "# GameServerPort: Port for GameServer to listen on. (Redirector server lives on " + RedirectorPort + ", clients request there)\n" +
-                              "# LogLevel: Valid values: Trace, Debug, Info, Warn, Error, Fatal, Off.\n" +
-                              "# DatabaseConnectionString: Connection string to PostgreSQL, for saving data. (Not required)\n\n";
+            var comments = "# GameServerIp: 'auto' = automatically detect public IP or specify a manual IP address, where GameServer is run on\n" +
+                           "# GameServerPort: Port for GameServer to listen on. (Redirector server lives on " + RedirectorPort + ", clients request there)\n" +
+                           "# LogLevel: Valid values: Trace, Debug, Info, Warn, Error, Fatal, Off.\n" +
+                           "# DatabaseConnectionString: Connection string to PostgreSQL, for saving data. (Not required)\n\n";
             File.WriteAllText(configFile, comments + yaml);
             Logger.Warn("Config file created: " + configFile);
             return;
@@ -114,7 +114,7 @@ internal class Program
         core.AddComponent<LeagueComponent>();
         core.AddComponent<ClubsComponent>();
         core.AddComponent<StatsComponent>();
-        core.AddComponent<GameManagerComponent>();
+        core.AddComponent<GameManager>();
         core.AddComponent<GameReportingComponent>();
 
         core.AddComponent<DynamicMessagingComponent>(); // Seems to be NHL10 Specific Components
@@ -140,10 +140,10 @@ internal class Program
                     break;
 
                 case "status":
-                    Logger.Info("Zamboni " + Version);
+                    Logger.Info(Name);
                     Logger.Info("Server running on ip: " + GameServerIp + " (" + PublicIp + ")");
                     Logger.Info("GameServerPort port: " + ZamboniConfig.GameServerPort);
-                    Logger.Info("Redirector port: "+RedirectorPort);
+                    Logger.Info("Redirector port: " + RedirectorPort);
                     Logger.Info("Online Players: " + ServerManager.GetServerPlayers().Count);
                     foreach (var serverPlayer in ServerManager.GetServerPlayers()) Logger.Info(serverPlayer.UserIdentification.mName);
                     Logger.Info("Queued Total Players: " + ServerManager.GetQueuedPlayers().Count);

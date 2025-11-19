@@ -53,7 +53,7 @@ public class UtilComponent : UtilComponentBase.Server
                 },
                 mServiceId = 1
             },
-            mServerVersion = "Zamboni " + Program.Version
+            mServerVersion = Program.Name
         });
     }
 
@@ -96,7 +96,7 @@ public class UtilComponent : UtilComponentBase.Server
     {
         return cfid switch
         {
-            "BlazeSDK" => new SortedDictionary<string, string>() { { "pingPeriodInMs", "15000" }, { "voipHeadsetUpdateRate", "1000" } },
+            "BlazeSDK" => new SortedDictionary<string, string> { { "pingPeriodInMs", "15000" }, { "voipHeadsetUpdateRate", "1000" } },
             "OSDK_CORE" => new SortedDictionary<string, string>(),
             "OSDK_CLIENT" => new SortedDictionary<string, string>(),
             "OSDK_NUCLEUS" => new SortedDictionary<string, string>(),
@@ -142,6 +142,7 @@ public class UtilComponent : UtilComponentBase.Server
     {
         return Task.FromResult(new NullStruct());
     }
+
     public override Task<UserSettingsLoadAllResponse> UserSettingsLoadAllAsync(NullStruct request, BlazeRpcContext context)
     {
         return Task.FromResult(new UserSettingsLoadAllResponse());

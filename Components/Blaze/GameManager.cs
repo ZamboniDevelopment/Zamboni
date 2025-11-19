@@ -8,13 +8,13 @@ using NLog;
 
 namespace Zamboni.Components.Blaze;
 
-public class GameManagerComponent : GameManagerBase.Server
+public class GameManager : GameManagerBase.Server
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private static readonly Timer Timer;
 
-    static GameManagerComponent()
+    static GameManager()
     {
         Timer = new Timer(2000);
         Timer.Elapsed += OnTimedEvent;
@@ -117,22 +117,22 @@ public class GameManagerComponent : GameManagerBase.Server
 
     // Yes, this is the request that client sends when he wants to create an OTP Lobby. Real ea type shi
     //  STILL WIP
-     public override Task<JoinGameResponse> ResetDedicatedServerAsync(CreateGameRequest request, BlazeRpcContext context)
-     {
-         var host = ServerManager.GetServerPlayer(context.BlazeConnection);
-    
-         var serverGame = new ServerGame(host, request);
-         Task.Run(async () =>
-         {
-             await Task.Delay(100);
-             serverGame.AddGameParticipant(host);
-         });
-    
-         return Task.FromResult(new JoinGameResponse
-         {
-             mGameId = serverGame.ReplicatedGameData.mGameId
-         });
-     }
+    public override Task<JoinGameResponse> ResetDedicatedServerAsync(CreateGameRequest request, BlazeRpcContext context)
+    {
+        var host = ServerManager.GetServerPlayer(context.BlazeConnection);
+
+        var serverGame = new ServerGame(host, request);
+        Task.Run(async () =>
+        {
+            await Task.Delay(100);
+            serverGame.AddGameParticipant(host);
+        });
+
+        return Task.FromResult(new JoinGameResponse
+        {
+            mGameId = serverGame.ReplicatedGameData.mGameId
+        });
+    }
 
     public override Task<JoinGameResponse> JoinGameAsync(JoinGameRequest request, BlazeRpcContext context)
     {
@@ -144,7 +144,7 @@ public class GameManagerComponent : GameManagerBase.Server
             await Task.Delay(100);
             game.AddGameParticipant(accepter);
         });
-        
+
         return Task.FromResult(new JoinGameResponse
         {
             mGameId = request.mGameId

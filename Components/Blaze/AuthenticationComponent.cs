@@ -1,19 +1,16 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Blaze2SDK.Blaze;
 using Blaze2SDK.Blaze.Authentication;
 using Blaze2SDK.Components;
 using BlazeCommon;
-using NLog;
 using XI5;
 
 namespace Zamboni.Components.Blaze;
 
 public class AuthenticationComponent : AuthenticationComponentBase.Server
 {
-
     public override Task<ConsoleLoginResponse> Ps3LoginAsync(PS3LoginRequest request, BlazeRpcContext context)
     {
         var ticket = new XI5Ticket(request.mPS3Ticket);
@@ -31,7 +28,7 @@ public class AuthenticationComponent : AuthenticationComponentBase.Server
         externalBlob.Add(0x1);
         externalBlob.AddRange(new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
 
-        UserIdentification userIdentification = new UserIdentification
+        var userIdentification = new UserIdentification
         {
             mAccountId = (long)ticket.UserId,
             mAccountLocale = 1701729619,
@@ -41,8 +38,8 @@ public class AuthenticationComponent : AuthenticationComponentBase.Server
             mName = ticket.OnlineId,
             mPersonaId = ticket.OnlineId
         };
-        
-        UserSessionExtendedData extendedData = new UserSessionExtendedData
+
+        var extendedData = new UserSessionExtendedData
         {
             mAddress = null!,
             mBestPingSiteAlias = "qos",
@@ -58,8 +55,8 @@ public class AuthenticationComponent : AuthenticationComponentBase.Server
             mUserInfoAttribute = 0,
             mBlazeObjectIdList = new List<ulong>()
         };
-        
-        SessionInfo sessionInfo = new SessionInfo
+
+        var sessionInfo = new SessionInfo
         {
             mBlazeUserId = (uint)ticket.UserId,
             mSessionKey = ticket.UserId.ToString(),
@@ -74,7 +71,7 @@ public class AuthenticationComponent : AuthenticationComponentBase.Server
             },
             mUserId = (long)ticket.UserId
         };
-        
+
         new ServerPlayer(context.BlazeConnection, userIdentification, extendedData, sessionInfo);
 
         Task.Run(async () =>
@@ -101,7 +98,7 @@ public class AuthenticationComponent : AuthenticationComponentBase.Server
             mTosUri = ""
         });
     }
-    
+
     public override Task<NullStruct> LogoutAsync(NullStruct request, BlazeRpcContext context)
     {
         return Task.FromResult(new NullStruct());

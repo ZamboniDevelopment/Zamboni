@@ -22,10 +22,10 @@ public class Api
     {
         var builder = WebApplication.CreateBuilder();
         var app = builder.Build();
-        
+
         app.MapGet("/status", () => Results.Json(new
         {
-            serverVersion = Program.Version,
+            serverVersion = Program.Name,
             onlineUsersCount = ServerManager.GetServerPlayers().Count,
             onlineUsers = string.Join(", ", ServerManager.GetServerPlayers().Select(serverPlayer => serverPlayer.UserIdentification.mName)),
             queuedUsers = ServerManager.GetQueuedPlayers().Count,
@@ -42,10 +42,7 @@ public class Api
             await using var cmd = new NpgsqlCommand("SELECT DISTINCT gamertag FROM reports", conn);
             await using var reader = await cmd.ExecuteReaderAsync();
 
-            while (await reader.ReadAsync())
-            {
-                list.Add(reader.GetString(0));
-            }
+            while (await reader.ReadAsync()) list.Add(reader.GetString(0));
 
             return Results.Json(list);
         });
@@ -82,7 +79,7 @@ public class Api
 
             return new PlayerProfile(user_id, gamertag, totalGames, totalGoals);
         });
-        
+
         app.MapGet("/api/raw/games", async () =>
         {
             var list = new List<Dictionary<string, object>>();
@@ -97,7 +94,7 @@ public class Api
             {
                 var row = new Dictionary<string, object>();
 
-                for (int i = 0; i < reader.FieldCount; i++)
+                for (var i = 0; i < reader.FieldCount; i++)
                 {
                     var columnName = reader.GetName(i);
                     var value = reader.IsDBNull(i) ? null : reader.GetValue(i);
@@ -109,7 +106,7 @@ public class Api
 
             return Results.Json(list);
         });
-        
+
         app.MapGet("/api/raw/reports", async () =>
         {
             var list = new List<Dictionary<string, object>>();
@@ -124,7 +121,7 @@ public class Api
             {
                 var row = new Dictionary<string, object>();
 
-                for (int i = 0; i < reader.FieldCount; i++)
+                for (var i = 0; i < reader.FieldCount; i++)
                 {
                     var columnName = reader.GetName(i);
                     var value = reader.IsDBNull(i) ? null : reader.GetValue(i);
