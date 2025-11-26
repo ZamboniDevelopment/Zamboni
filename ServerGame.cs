@@ -174,7 +174,7 @@ public class ServerGame
             mPlayerId = serverPlayer.UserIdentification.mBlazeId,
             mPlayerRemovedReason = PlayerRemovedReason.PLAYER_LEFT
         });
-        if (ServerPlayers.Count != 1) return;
+        if (ServerPlayers.Count > 1) return;
         NotifyParticipants(new NotifyPlayerRemoved
         {
             mPlayerRemovedTitleContext = 0, //??
