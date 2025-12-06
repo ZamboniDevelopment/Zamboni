@@ -24,6 +24,8 @@ public class GameManager : GameManagerBase.Server
 
     private static void OnTimedEvent(object sender, ElapsedEventArgs e)
     {
+        ServerManager.GetServerGames().RemoveAll(game => game.ServerPlayers.Count == 0); // How to not fix bugs
+        
         if (ServerManager.GetQueuedPlayers().Count <= 1) return;
 
         var grouped = ServerManager.GetQueuedPlayers().GroupBy(u => u.StartMatchmakingRequest.mCriteriaData.mGenericRulePrefsList.Find(prefs => prefs.mRuleName.Equals("OSDK_gameMode")).mDesiredValues[0]);
