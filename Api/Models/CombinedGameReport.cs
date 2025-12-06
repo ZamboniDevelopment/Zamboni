@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Zamboni.Models;
+namespace Zamboni.Api.Models;
 
 public class CombinedGameReport
 {

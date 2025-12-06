@@ -10,9 +10,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using StackExchange.Redis;
-using Zamboni.Models;
+using Zamboni.Api.Models;
 
-namespace Zamboni;
+namespace Zamboni.Api;
 
 public class Api
 {

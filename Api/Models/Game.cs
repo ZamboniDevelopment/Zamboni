@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Zamboni.Models;
+namespace Zamboni.Api.Models;
 
 public class Game
 {

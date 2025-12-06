@@ -12,6 +12,7 @@ using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using Zamboni.Components.Blaze;
 using Zamboni.Components.NHL10;
+using Zamboni.Api;
 
 namespace Zamboni;
 
@@ -43,7 +44,7 @@ internal class Program
         var commandTask = Task.Run(StartCommandListener);
         var redirectorTask = StartRedirectorServer();
         var coreTask = StartCoreServer();
-        var apiTask = new Api().StartAsync();
+        var apiTask = new Api.Api().StartAsync();
         Logger.Warn(Name + " started");
         await Task.WhenAll(redirectorTask, coreTask, commandTask, apiTask);
     }
