@@ -18,6 +18,7 @@
     <ItemGroup>
         <PackageReference Include="Npgsql" Version="9.0.4"/>
         <PackageReference Include="ReadLine" Version="2.0.1"/>
+        <PackageReference Include="StackExchange.Redis" Version="2.10.1" />
         <PackageReference Include="YamlDotNet" Version="16.3.0"/>
     </ItemGroup>
 
