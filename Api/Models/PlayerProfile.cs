@@ -1,4 +1,4 @@
-namespace Zamboni.Models;
+namespace Zamboni.Api.Models;
 
 public class PlayerProfile
 {

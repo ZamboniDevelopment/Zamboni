@@ -12,6 +12,7 @@ using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using Zamboni.Components.Blaze;
 using Zamboni.Components.NHL10;
+using Zamboni.Api;
 
 namespace Zamboni;
 
@@ -22,7 +23,7 @@ namespace Zamboni;
 // tcp.port == 17499 || udp.port == 17499 || tcp.port == 3659 || udp.port == 3659  || tcp.port == 17500 || udp.port == 17500 || tcp.port == 17501 || udp.port == 17501 || tcp.port == 17502 || udp.port == 17502 || tcp.port == 17503 || udp.port == 17503
 internal class Program
 {
-    public const string Name = "Zamboni 1.3.5";
+    public const string Name = "Zamboni 1.3.6";
     public const int RedirectorPort = 42100;
 
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -43,7 +44,7 @@ internal class Program
         var commandTask = Task.Run(StartCommandListener);
         var redirectorTask = StartRedirectorServer();
         var coreTask = StartCoreServer();
-        var apiTask = new Api().StartAsync();
+        var apiTask = new Api.Api().StartAsync();
         Logger.Warn(Name + " started");
         await Task.WhenAll(redirectorTask, coreTask, commandTask, apiTask);
     }
