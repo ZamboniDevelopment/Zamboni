@@ -23,7 +23,7 @@ namespace Zamboni;
 // tcp.port == 17499 || udp.port == 17499 || tcp.port == 3659 || udp.port == 3659  || tcp.port == 17500 || udp.port == 17500 || tcp.port == 17501 || udp.port == 17501 || tcp.port == 17502 || udp.port == 17502 || tcp.port == 17503 || udp.port == 17503
 internal class Program
 {
-    public const string Name = "Zamboni 1.3.5";
+    public const string Name = "Zamboni 1.3.6";
     public const int RedirectorPort = 42100;
 
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
