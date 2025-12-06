@@ -94,7 +94,7 @@ public class Api
             await using var conn = new NpgsqlConnection(Program.ZamboniConfig.DatabaseConnectionString);
             await conn.OpenAsync();
 
-            await using var cmd = new NpgsqlCommand("SELECT DISTINCT gamertag FROM reports", conn);
+            await using var cmd = new NpgsqlCommand("SELECT DISTINCT gamertag FROM reports WHERE gamertag IS NOT NULL", conn);
             await using var reader = await cmd.ExecuteReaderAsync();
 
             while (await reader.ReadAsync())
@@ -120,7 +120,9 @@ public class Api
 
             while (await reader.ReadAsync())
             {
-                reports.Add((reader.GetInt32(0), reader.GetInt32(1)));
+                var userId = reader.GetInt32(0);
+                var score = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
+                reports.Add((userId, score));
             }
 
             if (reports.Count == 0)
@@ -189,8 +191,16 @@ public class Api
             await conn.OpenAsync();
 
             var cmd = new NpgsqlCommand(@"
-                SELECT game_id, played_at, home_team, away_team, home_score, away_score
-                FROM games
+                SELECT 
+                    g.game_id::int AS game_id,
+                    g.created_at AS played_at,
+                    MAX(CASE WHEN r.team = 1 THEN r.team_name END) AS home_team,
+                    MAX(CASE WHEN r.team = 0 THEN r.team_name END) AS away_team,
+                    COALESCE(SUM(CASE WHEN r.team = 1 THEN r.score END), 0) AS home_score,
+                    COALESCE(SUM(CASE WHEN r.team = 0 THEN r.score END), 0) AS away_score
+                FROM games g
+                LEFT JOIN reports r ON r.game_id = g.game_id
+                GROUP BY g.game_id, g.created_at
                 ORDER BY played_at DESC
             ", conn);
 
@@ -202,10 +212,10 @@ public class Api
                 {
                     GameId = reader.GetInt32(0),
                     PlayedAt = reader.GetDateTime(1),
-                    HomeTeam = reader.GetString(2),
-                    AwayTeam = reader.GetString(3),
-                    HomeScore = reader.GetInt32(4),
-                    AwayScore = reader.GetInt32(5)
+                    HomeTeam = reader.IsDBNull(2) ? "Unknown" : reader.GetString(2),
+                    AwayTeam = reader.IsDBNull(3) ? "Unknown" : reader.GetString(3),
+                    HomeScore = reader.IsDBNull(4) ? 0 : reader.GetInt32(4),
+                    AwayScore = reader.IsDBNull(5) ? 0 : reader.GetInt32(5)
                 });
             }
 
@@ -233,8 +243,8 @@ public class Api
                 reports.Add(new ReportEntry
                 {
                     UserId = reader.GetInt32(0),
-                    Gamertag = reader.GetString(1),
-                    Score = reader.GetInt32(2)
+                    Gamertag = reader.IsDBNull(1) ? null : reader.GetString(1),
+                    Score = reader.IsDBNull(2) ? 0 : reader.GetInt32(2)
                 });
             }
 
@@ -284,7 +294,7 @@ public class Api
                        COUNT(*)     AS games_played
                 FROM reports r
                 JOIN games g ON g.game_id = r.game_id
-                WHERE (@from = '0001-01-01'::timestamp OR g.played_at >= @from)
+                WHERE (@from = '0001-01-01'::timestamp OR g.created_at >= @from)
                 GROUP BY r.gamertag
                 ORDER BY total_goals DESC
             ", conn);
@@ -297,9 +307,9 @@ public class Api
             {
                 entries.Add(new LeaderboardEntry
                 {
-                    Gamertag = reader.GetString(0),
-                    TotalGoals = reader.GetInt32(1),
-                    GamesPlayed = reader.GetInt32(2),
+                    Gamertag = reader.IsDBNull(0) ? "" : reader.GetString(0),
+                    TotalGoals = reader.IsDBNull(1) ? 0 : reader.GetInt32(1),
+                    GamesPlayed = reader.IsDBNull(2) ? 0 : reader.GetInt32(2),
                     Rank = rank++
                 });
             }
@@ -392,7 +402,7 @@ public class Api
 
             return Results.Json(payload);
         });
-        
+
         app.MapGet("/nhl10/api/reports/latest", async (int? limit) =>
         {
             var max = Math.Clamp(limit ?? 50, 1, 500);
@@ -404,7 +414,7 @@ public class Api
             var cmd = new NpgsqlCommand(@"
                 SELECT *
                 FROM reports
-                ORDER BY id DESC
+                ORDER BY created_at DESC
                 LIMIT @limit
             ", conn);
 
@@ -423,20 +433,31 @@ public class Api
 
             return Results.Json(list);
         });
-        
+
         app.MapGet("/nhl10/api/user/{id:int}/history", async (int id) =>
         {
             var list = new List<Dictionary<string, object?>>();
 
             await using var conn = new NpgsqlConnection(Program.ZamboniConfig.DatabaseConnectionString);
             await conn.OpenAsync();
-
             var cmd = new NpgsqlCommand(@"
-                SELECT r.*, g.played_at, g.home_team, g.away_team, g.home_score, g.away_score
+                WITH game_stats AS (
+                    SELECT 
+                        g.game_id,
+                        g.created_at AS played_at,
+                        MAX(CASE WHEN r.team = 1 THEN r.team_name END) AS home_team,
+                        MAX(CASE WHEN r.team = 0 THEN r.team_name END) AS away_team,
+                        COALESCE(SUM(CASE WHEN r.team = 1 THEN r.score END), 0) AS home_score,
+                        COALESCE(SUM(CASE WHEN r.team = 0 THEN r.score END), 0) AS away_score
+                    FROM games g
+                    LEFT JOIN reports r ON r.game_id = g.game_id
+                    GROUP BY g.game_id, g.created_at
+                )
+                SELECT r.*, gs.played_at, gs.home_team, gs.away_team, gs.home_score, gs.away_score
                 FROM reports r
-                JOIN games g ON g.game_id = r.game_id
+                JOIN game_stats gs ON gs.game_id = r.game_id
                 WHERE r.user_id = @id
-                ORDER BY g.played_at DESC
+                ORDER BY gs.played_at DESC
             ", conn);
 
             cmd.Parameters.AddWithValue("@id", id);
@@ -464,9 +485,17 @@ public class Api
             await conn.OpenAsync();
 
             await using (var gameCmd = new NpgsqlCommand(@"
-                SELECT game_id, played_at, home_team, away_team, home_score, away_score
-                FROM games
-                WHERE game_id = @id
+                SELECT 
+                    g.game_id::int AS game_id,
+                    g.created_at AS played_at,
+                    MAX(CASE WHEN r.team = 1 THEN r.team_name END) AS home_team,
+                    MAX(CASE WHEN r.team = 0 THEN r.team_name END) AS away_team,
+                    COALESCE(SUM(CASE WHEN r.team = 1 THEN r.score END), 0) AS home_score,
+                    COALESCE(SUM(CASE WHEN r.team = 0 THEN r.score END), 0) AS away_score
+                FROM games g
+                LEFT JOIN reports r ON r.game_id = g.game_id
+                WHERE g.game_id = @id
+                GROUP BY g.game_id, g.created_at
             ", conn))
             {
                 gameCmd.Parameters.AddWithValue("@id", id);
@@ -478,10 +507,10 @@ public class Api
                     {
                         GameId = reader.GetInt32(0),
                         PlayedAt = reader.GetDateTime(1),
-                        HomeTeam = reader.GetString(2),
-                        AwayTeam = reader.GetString(3),
-                        HomeScore = reader.GetInt32(4),
-                        AwayScore = reader.GetInt32(5)
+                        HomeTeam = reader.IsDBNull(2) ? "Unknown" : reader.GetString(2),
+                        AwayTeam = reader.IsDBNull(3) ? "Unknown" : reader.GetString(3),
+                        HomeScore = reader.IsDBNull(4) ? 0 : reader.GetInt32(4),
+                        AwayScore = reader.IsDBNull(5) ? 0 : reader.GetInt32(5)
                     };
                 }
             }
@@ -503,8 +532,8 @@ public class Api
                     reports.Add(new ReportEntry
                     {
                         UserId = reader.GetInt32(0),
-                        Gamertag = reader.GetString(1),
-                        Score = reader.GetInt32(2)
+                        Gamertag = reader.IsDBNull(1) ? null : reader.GetString(1),
+                        Score = reader.IsDBNull(2) ? 0 : reader.GetInt32(2)
                     });
                 }
             }
@@ -522,7 +551,7 @@ public class Api
                 winnerTeam
             });
         });
-        
+
         await app.RunAsync();
     }
 }
