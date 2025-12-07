@@ -185,41 +185,77 @@ public class Api
 
         app.MapGet("/nhl10/api/games", async () =>
         {
-            var games = new List<Game>();
+            var list = new List<object>();
 
             await using var conn = new NpgsqlConnection(Program.ZamboniConfig.DatabaseConnectionString);
             await conn.OpenAsync();
 
-            var cmd = new NpgsqlCommand(@"
-                SELECT 
-                    g.game_id::int AS game_id,
-                    g.created_at AS played_at,
-                    MAX(CASE WHEN r.team = 1 THEN r.team_name END) AS home_team,
-                    MAX(CASE WHEN r.team = 0 THEN r.team_name END) AS away_team,
-                    COALESCE(SUM(CASE WHEN r.team = 1 THEN r.score END), 0) AS home_score,
-                    COALESCE(SUM(CASE WHEN r.team = 0 THEN r.score END), 0) AS away_score
-                FROM games g
-                LEFT JOIN reports r ON r.game_id = g.game_id
-                GROUP BY g.game_id, g.created_at
-                ORDER BY played_at DESC
-            ", conn);
+            var gamesCmd = new NpgsqlCommand("SELECT * FROM games ORDER BY created_at DESC", conn);
+            var reportsCmd = new NpgsqlCommand("SELECT * FROM reports", conn);
 
-            await using var reader = await cmd.ExecuteReaderAsync();
+            var rawGames = new List<Dictionary<string, object?>>();
+            var rawReports = new List<Dictionary<string, object?>>();
 
-            while (await reader.ReadAsync())
+            await using (var r = await gamesCmd.ExecuteReaderAsync())
             {
-                games.Add(new Game
+                while (await r.ReadAsync())
                 {
-                    GameId = reader.GetInt32(0),
-                    PlayedAt = reader.GetDateTime(1),
-                    HomeTeam = reader.IsDBNull(2) ? "Unknown" : reader.GetString(2),
-                    AwayTeam = reader.IsDBNull(3) ? "Unknown" : reader.GetString(3),
-                    HomeScore = reader.IsDBNull(4) ? 0 : reader.GetInt32(4),
-                    AwayScore = reader.IsDBNull(5) ? 0 : reader.GetInt32(5)
-                });
+                    var row = new Dictionary<string, object?>();
+                    for (int i = 0; i < r.FieldCount; i++)
+                        row[r.GetName(i)] = r.IsDBNull(i) ? null : r.GetValue(i);
+                    rawGames.Add(row);
+                }
             }
 
-            return Results.Json(games);
+            await using (var r = await reportsCmd.ExecuteReaderAsync())
+            {
+                while (await r.ReadAsync())
+                {
+                    var row = new Dictionary<string, object?>();
+                    for (int i = 0; i < r.FieldCount; i++)
+                        row[r.GetName(i)] = r.IsDBNull(i) ? null : r.GetValue(i);
+                    rawReports.Add(row);
+                }
+            }
+            
+            var grouped = rawReports
+                .Where(r => r.ContainsKey("game_id"))
+                .GroupBy(r => Convert.ToInt32(r["game_id"]))
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            foreach (var game in rawGames)
+            {
+                int gameId = Convert.ToInt32(game["game_id"]);
+                grouped.TryGetValue(gameId, out var reps);
+
+                reps ??= new();
+
+                var obj = new
+                {
+                    game_id = gameId,
+                    fnsh = game.ContainsKey("fnsh") ? game["fnsh"] : null,
+                    gtyp = game.ContainsKey("gtyp") ? game["gtyp"] : null,
+                    venue = game.ContainsKey("venue") ? game["venue"] : null,
+                    created_at = game["created_at"],
+                    players = reps.Count,
+                    totalGoals = reps.Sum(r => Convert.ToInt32(r["score"] ?? 0)),
+                    avgFps = reps.Any() ? reps.Average(r => Convert.ToInt32(r["fpsavg"] ?? 0)) : 0,
+                    avgLatency = reps.Any() ? reps.Average(r => Convert.ToInt32(r["lateavgnet"] ?? 0)) : 0,
+                    teams = reps.Select(r => new
+                    {
+                        team_name = r["team_name"],
+                        score = r["score"],
+                        shots = r["shots"],
+                        hits = r["hits"],
+                        gamertag = r["gamertag"]
+                    }).ToList(),
+                    status = Convert.ToBoolean(game["fnsh"] ?? false) ? "Finished" : "In Progress"
+                };
+
+                list.Add(obj);
+            }
+
+            return Results.Json(list);
         });
 
         app.MapGet("/nhl10/api/game/{id:int}/reports", async (int id) =>
@@ -436,44 +472,64 @@ public class Api
 
         app.MapGet("/nhl10/api/user/{id:int}/history", async (int id) =>
         {
-            var list = new List<Dictionary<string, object?>>();
+            var history = new List<Dictionary<string, object?>>();
 
             await using var conn = new NpgsqlConnection(Program.ZamboniConfig.DatabaseConnectionString);
             await conn.OpenAsync();
-            var cmd = new NpgsqlCommand(@"
-                WITH game_stats AS (
-                    SELECT 
-                        g.game_id,
-                        g.created_at AS played_at,
-                        MAX(CASE WHEN r.team = 1 THEN r.team_name END) AS home_team,
-                        MAX(CASE WHEN r.team = 0 THEN r.team_name END) AS away_team,
-                        COALESCE(SUM(CASE WHEN r.team = 1 THEN r.score END), 0) AS home_score,
-                        COALESCE(SUM(CASE WHEN r.team = 0 THEN r.score END), 0) AS away_score
-                    FROM games g
-                    LEFT JOIN reports r ON r.game_id = g.game_id
-                    GROUP BY g.game_id, g.created_at
-                )
-                SELECT r.*, gs.played_at, gs.home_team, gs.away_team, gs.home_score, gs.away_score
-                FROM reports r
-                JOIN game_stats gs ON gs.game_id = r.game_id
-                WHERE r.user_id = @id
-                ORDER BY gs.played_at DESC
-            ", conn);
+            
+            var userCmd = new NpgsqlCommand("SELECT * FROM reports WHERE user_id = @id ORDER BY created_at DESC", conn);
+            userCmd.Parameters.AddWithValue("@id", id);
 
-            cmd.Parameters.AddWithValue("@id", id);
-
-            await using var reader = await cmd.ExecuteReaderAsync();
-
-            while (await reader.ReadAsync())
+            var userReports = new List<Dictionary<string, object?>>();
+            await using (var reader = await userCmd.ExecuteReaderAsync())
             {
-                var row = new Dictionary<string, object?>();
-                for (var i = 0; i < reader.FieldCount; i++)
-                    row[reader.GetName(i)] = reader.IsDBNull(i) ? null : reader.GetValue(i);
-
-                list.Add(row);
+                while (await reader.ReadAsync())
+                {
+                    var row = new Dictionary<string, object?>();
+                    for (int i = 0; i < reader.FieldCount; i++)
+                        row[reader.GetName(i)] = reader.IsDBNull(i) ? null : reader.GetValue(i);
+                    userReports.Add(row);
+                }
             }
 
-            return Results.Json(list);
+            if (!userReports.Any())
+                return Results.Json(history);
+
+            var gameIds = userReports.Select(r => Convert.ToInt32(r["game_id"])).ToArray();
+            var oppCmd = new NpgsqlCommand($@"
+                SELECT * FROM reports 
+                WHERE game_id = ANY(@gids) AND user_id != @id", conn);
+
+            oppCmd.Parameters.AddWithValue("@gids", gameIds);
+            oppCmd.Parameters.AddWithValue("@id", id);
+
+            var opponents = new List<Dictionary<string, object?>>();
+            await using (var reader2 = await oppCmd.ExecuteReaderAsync())
+            {
+                while (await reader2.ReadAsync())
+                {
+                    var row = new Dictionary<string, object?>();
+                    for (int i = 0; i < reader2.FieldCount; i++)
+                        row[reader2.GetName(i)] = reader2.IsDBNull(i) ? null : reader2.GetValue(i);
+                    opponents.Add(row);
+                }
+            }
+
+            foreach (var r in userReports)
+            {
+                int gid = Convert.ToInt32(r["game_id"]);
+                var opp = opponents.FirstOrDefault(x => Convert.ToInt32(x["game_id"]) == gid);
+
+                r["opponent"] = opp?["gamertag"];
+                r["opponent_team"] = opp?["team_name"];
+                r["opponent_score"] = opp?["score"];
+                r["opponent_hits"] = opp?["hits"];
+                r["opponent_shots"] = opp?["shots"];
+
+                history.Add(r);
+            }
+
+            return Results.Json(history);
         });
 
         app.MapGet("/nhl10/api/games/{id:int}/summary", async (int id) =>
