@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -41,12 +42,14 @@ internal class Program
         InitDatabase();
         GameServerIp = ZamboniConfig.GameServerIp.Equals("auto") ? PublicIp : ZamboniConfig.GameServerIp;
 
-        var commandTask = Task.Run(StartCommandListener);
-        var redirectorTask = StartRedirectorServer();
-        var coreTask = StartCoreServer();
-        var apiTask = new Api.Api().StartAsync();
-        Logger.Warn(Name + " started");
-        await Task.WhenAll(redirectorTask, coreTask, commandTask, apiTask);
+        var tasks = new List<Task>();
+
+        tasks.Add(Task.Run(StartCommandListener));
+        tasks.Add(StartCoreServer());
+        tasks.Add(new Api.Api().StartAsync());
+        if (ZamboniConfig.HostRedirectorInstance) tasks.Add(StartRedirectorServer());
+
+        await Task.WhenAll(tasks);
     }
 
     private static void StartLogger()
