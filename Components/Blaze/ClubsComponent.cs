@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Blaze2SDK.Blaze.Clubs;
 using Blaze2SDK.Components;
 using BlazeCommon;
 
@@ -6,9 +7,9 @@ namespace Zamboni.Components.Blaze;
 
 internal class ClubsComponent : ClubsComponentBase.Server
 {
-    public override Task<NullStruct> GetClubsComponentSettingsAsync(NullStruct request, BlazeRpcContext context)
+    public override Task<ClubsComponentSettings> GetClubsComponentSettingsAsync(NullStruct request, BlazeRpcContext context)
     {
-        return Task.FromResult(new NullStruct());
+        return Task.FromResult(new ClubsComponentSettings());
     }
 
     public override Task<NullStruct> GetPetitionsAsync(NullStruct request, BlazeRpcContext context)
@@ -17,9 +18,9 @@ internal class ClubsComponent : ClubsComponentBase.Server
     }
 
 
-    public override Task<NullStruct> FindClubsAsync(NullStruct request, BlazeRpcContext context)
+    public override Task<FindClubsResponse> FindClubsAsync(FindClubsRequest request, BlazeRpcContext context)
     {
-        return Task.FromResult(new NullStruct());
+        return Task.FromResult(new FindClubsResponse());
     }
 
     public override Task<NullStruct> UpdateMemberOnlineStatusAsync(NullStruct request, BlazeRpcContext context)
