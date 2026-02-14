@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tdf", "..\BlazeSDK\Tdf\Tdf.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XI5", "..\BlazeSDK\XI5\XI5.csproj", "{957CA2F0-E271-4644-9BF3-52BDB0BBE388}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SceNetNp", "..\PSN\SceNetNp\SceNetNp.csproj", "{B3D13607-005E-4C79-8E78-A2DCE380A1C9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +44,9 @@ Global
 		{957CA2F0-E271-4644-9BF3-52BDB0BBE388}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{957CA2F0-E271-4644-9BF3-52BDB0BBE388}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{957CA2F0-E271-4644-9BF3-52BDB0BBE388}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B3D13607-005E-4C79-8E78-A2DCE380A1C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3D13607-005E-4C79-8E78-A2DCE380A1C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3D13607-005E-4C79-8E78-A2DCE380A1C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3D13607-005E-4C79-8E78-A2DCE380A1C9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

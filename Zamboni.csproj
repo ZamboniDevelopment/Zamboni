@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
     </PropertyGroup>
@@ -13,6 +13,7 @@
         <ProjectReference Include="..\BlazeSDK\FixedSsl\FixedSsl.csproj"/>
         <ProjectReference Include="..\BlazeSDK\Tdf\Tdf.csproj"/>
         <ProjectReference Include="..\BlazeSDK\XI5\XI5.csproj"/>
+        <ProjectReference Include="..\PSN\SceNetNp\SceNetNp.csproj" />
     </ItemGroup>
 
     <ItemGroup>
