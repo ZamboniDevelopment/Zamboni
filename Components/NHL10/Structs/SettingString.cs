@@ -3,24 +3,24 @@ using Tdf;
 namespace Zamboni.Components.NHL10.Structs;
 
 [TdfStruct]
-public struct SettingsString
+public struct SettingString
 {
     [TdfMember("DEF")] 
-    public string mDEF;
+    public string mDefault;
 
     [TdfMember("HLAB")] 
-    public string mHLAB;
+    public string mHelpLabel;
 
     [TdfMember("ID")] 
-    public string mID;
+    public string mId;
 
     [TdfMember("LABL")] 
-    public string mLABL;
+    public string mLabel;
 
     [TdfMember("LOCF")] 
-    public uint mLOCF;
+    public uint mLocalizedFields;
 
     [TdfMember("TOGG")] 
-    public uint mTOGG;
+    public uint mToggles;
     
 }

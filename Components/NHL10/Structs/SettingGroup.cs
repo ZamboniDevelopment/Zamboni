@@ -7,10 +7,10 @@ namespace Zamboni.Components.NHL10.Structs;
 public struct SettingGroup
 {
     [TdfMember("ID")] 
-    public string mID;
+    public string mId;
 
     [TdfMember("LSET")] 
-    public List<string> mLSET;
+    public List<string> mSettingList;
 
     [TdfMember("LVWS")] 
     public List<SettingView> mViewList;

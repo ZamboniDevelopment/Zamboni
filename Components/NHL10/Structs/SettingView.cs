@@ -7,7 +7,7 @@ namespace Zamboni.Components.NHL10.Structs;
 public struct SettingView
 {
     [TdfMember("ID")] 
-    public string mID;
+    public string mId;
 
     [TdfMember("LVDS")] 
     public List<SettingViewData> mSettingViewDataList;

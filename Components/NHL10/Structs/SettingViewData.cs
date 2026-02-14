@@ -6,18 +6,18 @@ namespace Zamboni.Components.NHL10.Structs;
 public struct SettingViewData
 {
     [TdfMember("DEFS")] 
-    public string mDEFS;
+    public string mDefaultStr;
 
     [TdfMember("HLAB")] 
-    public string mHLAB;
+    public string mHelpLabel;
 
     [TdfMember("ID")] 
-    public string mID;
+    public string mId;
 
     [TdfMember("TOGG")] 
-    public uint mTOGG;
+    public uint mToggles;
     
     [TdfMember("VAL")] 
-    public string mVAL;
+    public string mValueStr;
     
 }

@@ -16,10 +16,10 @@ internal class DynamicMessagingComponent : DynamicMessagingComponentBase.Server
     {
         return Task.FromResult(new DynamicConfigResponse
         {
-            mDataRequestDelay = 1,
-            mErrorRetryDelay = 1,
-            mMessageDelayInterval = 1,
-            mMaximumMessageCount = 1
+            mDataRequestDelay = 100,
+            mErrorRetryDelay = 100,
+            mMessageDelayInterval = 100,
+            mMaximumMessageCount = 10
         });
     }
 }

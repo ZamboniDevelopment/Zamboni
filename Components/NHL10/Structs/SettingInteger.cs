@@ -7,24 +7,24 @@ namespace Zamboni.Components.NHL10.Structs;
 public struct SettingInteger
 {
     [TdfMember("DEF")] 
-    public uint mDEF;
+    public uint mDefault;
 
     [TdfMember("HLAB")] 
-    public string mHLAB;
+    public string mHelpLabel;
 
     [TdfMember("ID")] 
-    public string mID;
+    public string mId;
 
     [TdfMember("LABL")] 
-    public string mLABL;
+    public string mLabel;
 
     [TdfMember("LOCF")] 
-    public uint mLOCF;
+    public uint mLocalizedFields;
 
     [TdfMember("MPVL")] 
-    public SortedDictionary<uint,string> mMPVL;
+    public SortedDictionary<uint,string> mPossibleValueMap;
 
     [TdfMember("TOGG")] 
-    public uint mTOGG;
+    public uint mToggles;
     
 }
