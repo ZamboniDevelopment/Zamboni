@@ -105,7 +105,7 @@ public class UtilComponent : UtilComponentBase.Server
             "NHL_CUSTOM" => new SortedDictionary<string, string>(),
             "OSDK_TICKER" => new SortedDictionary<string, string>(),
             "OSDK_SPONSORED_EVENT" => new SortedDictionary<string, string>(),
-            "OSDK_ROSTER" => new SortedDictionary<string, string>(),
+            "OSDK_ROSTER" => new SortedDictionary<string, string> { { "CRC", "37Cwao1wBI7l3Cn22f2qLQYV3Glbgb2jeQDq2zwt474UhROF348J4T" }, { "URL", "" } },
             _ => throw new Exception("Unknown cfid: " + cfid)
         };
     }
