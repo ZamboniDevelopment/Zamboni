@@ -12,7 +12,6 @@
         <ProjectReference Include="..\BlazeSDK\BlazeCommon\BlazeCommon.csproj"/>
         <ProjectReference Include="..\BlazeSDK\FixedSsl\FixedSsl.csproj"/>
         <ProjectReference Include="..\BlazeSDK\Tdf\Tdf.csproj"/>
-        <ProjectReference Include="..\BlazeSDK\XI5\XI5.csproj"/>
         <ProjectReference Include="..\PSN\SceNetNp\SceNetNp.csproj" />
     </ItemGroup>
 

@@ -12,9 +12,9 @@ internal class ClubsComponent : ClubsComponentBase.Server
         return Task.FromResult(new ClubsComponentSettings());
     }
 
-    public override Task<NullStruct> GetPetitionsAsync(NullStruct request, BlazeRpcContext context)
+    public override Task<GetPetitionsResponse> GetPetitionsAsync(GetPetitionsRequest request, BlazeRpcContext context)
     {
-        return Task.FromResult(new NullStruct());
+        return Task.FromResult(new GetPetitionsResponse());
     }
 
 
